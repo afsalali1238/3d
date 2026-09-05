@@ -3,7 +3,7 @@
  * This layer owns app state (gender, view, mode, selection, confirmed pins)
  * and talks to the 3D module exclusively through the BodyViewer prop API.
  */
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import BodyViewer from './components/body/BodyViewer';
 import { GROUP_LABELS, REGIONS, REGION_BY_ID, regionLabel } from './components/body/regions';
 import type {
@@ -79,6 +79,20 @@ export default function App() {
   const [toast, setToast] = useState<string | null>(null);
 
   const t = T[locale];
+
+  // Escape backs out: pinpoint -> select -> nothing selected
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      if (showList) setShowList(false);
+      else if (selectedRegionId) {
+        setSelectedRegionId(null);
+        setMode('select');
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [showList, selectedRegionId]);
 
   const handleRegionSelect = useCallback((id: string) => {
     setSelectedRegionId(id);

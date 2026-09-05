@@ -91,7 +91,11 @@ crash, show a blank canvas, or silently substitute a low-quality mesh.
 # source data: clone of github.com/ashemag/human-atlas (BodyParts3D chunks)
 ATLAS_DIR=/path/to/human-atlas/public/models python3 scripts/build_body_asset.py
 python3 scripts/build_studio_hdr.py
+./scripts/compress-models.sh   # Draco: ~634 KB -> ~80 KB per body
 ```
+
+The `_REGIONID` channel survives Draco quantization integer-exact (all 81
+region ids verified after a compress/decompress round trip).
 
 Outputs: both GLBs, `regions.gen.ts` (typed region table with focus targets
 and neighbour graph), `fallbackShapes.gen.ts` (2D projected outlines for the
