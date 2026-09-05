@@ -202,6 +202,19 @@
   min-height: 46px;
 }
 
+.did-you-mean {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.chip-sm {
+  font-size: 12px;
+  padding: 6px 11px;
+  min-height: 32px;
+}
+
 .intensity-row {
   display: flex;
   align-items: center;

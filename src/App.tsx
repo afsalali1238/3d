@@ -5,7 +5,7 @@
  */
 import { useCallback, useMemo, useState } from 'react';
 import BodyViewer from './components/body/BodyViewer';
-import { GROUP_LABELS, REGIONS, regionLabel } from './components/body/regions';
+import { GROUP_LABELS, REGIONS, REGION_BY_ID, regionLabel } from './components/body/regions';
 import type {
   BodyView,
   Gender,
@@ -31,6 +31,7 @@ const T = {
     cantFind: "I can't find it",
     listTitle: 'Choose a region',
     close: 'Close',
+    didYouMean: 'Did you mean…?',
     pins: 'Pain points',
     clear: 'Clear',
     none: 'No pain points yet — select a region, then tap the exact spot.',
@@ -53,6 +54,7 @@ const T = {
     cantFind: 'لا أستطيع إيجاده',
     listTitle: 'اختر منطقة',
     close: 'إغلاق',
+    didYouMean: 'هل تقصد…؟',
     pins: 'نقاط الألم',
     clear: 'مسح',
     none: 'لا توجد نقاط ألم بعد — اختر منطقة ثم اضغط على النقطة المحددة.',
@@ -209,6 +211,18 @@ export default function App() {
             <div className="selected-box">
               {selectedRegionId ? regionLabel(selectedRegionId, locale) : '—'}
             </div>
+            {selectedRegionId && REGION_BY_ID[selectedRegionId] && (
+              <div className="did-you-mean">
+                <span className="muted">{t.didYouMean}</span>
+                <div className="chip-grid">
+                  {REGION_BY_ID[selectedRegionId].neighbours.slice(0, 4).map((nId) => (
+                    <button key={nId} className="chip chip-sm" onClick={() => handleRegionSelect(nId)}>
+                      {regionLabel(nId, locale)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
             <label className="intensity-row">
               <span>{t.intensity}</span>
               <input

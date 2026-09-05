@@ -46,6 +46,8 @@ function detectQuality(): { post: boolean; dpr: [number, number] } {
 }
 
 function webglAvailable(): boolean {
+  // ?force2d exercises the no-WebGL path for testing
+  if (typeof window !== 'undefined' && window.location.search.includes('force2d')) return false;
   try {
     const c = document.createElement('canvas');
     return !!(c.getContext('webgl2') || c.getContext('webgl'));
@@ -356,7 +358,7 @@ function Scene(props: SceneProps) {
         fallback={
           <>
             <PlaceholderBody label={`missing model /models/body-${gender}.glb`} />
-            <Html center position={[0, 1.86, 0]}>
+            <Html center position={[0, 1.78, 0]}>
               <div className="bv-placeholder-tag">Model asset missing — see ASSET-SPEC.md</div>
             </Html>
           </>

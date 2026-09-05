@@ -116,6 +116,8 @@ export function CameraRig({ enabled = true }: { enabled?: boolean }) {
     };
     const onPointerMove = (e: PointerEvent) => {
       if (!s.pointers.has(e.pointerId)) return;
+      // a pin drag owns the pointer — don't orbit underneath it
+      if (useViewerStore.getState().draggingPinId) return;
       const prev = s.pointers.get(e.pointerId)!;
       const dx = e.clientX - prev.x;
       const dy = e.clientY - prev.y;
