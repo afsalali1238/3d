@@ -1,5 +1,20 @@
 # Session Handoff — minimal intake + Vercel fixes
 
+> **RESOLVED — 2026-09-06, follow-up session `arena/01a076a9-3d`.**
+>
+> The work described in this handoff is **on `main` and in Vercel production**:
+> PR #5 (head `87674d9`) merged as `1776a234`, Vercel production deployment
+> completed 2026-09-06 11:49 UTC
+> (`3d-47wcblrxu-buddhas-projects-000b427b.vercel.app`), CI `verify` green.
+>
+> Commit `945dc6f`, referenced by a later session that could not push, was
+> **never uploaded** — it does not exist on GitHub (checked via the REST API,
+> every branch and PR ref). It was that session's local re-creation of this
+> same handoff work and is fully superseded by `1776a234`. There is nothing
+> left to recover or merge for it. Re-verified on the merge commit:
+> `npm run build` passes, `npm test` 116/116, content bundle has 10 published
+> exercises and 0 published questions / red flags / precautions.
+
 Repository: `afsalali1238/3d`
 Session branch: `arena/01a07686-3d`
 Date: 2026-09-06
