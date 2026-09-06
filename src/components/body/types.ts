@@ -2,7 +2,7 @@ export type BodyGroup = 'head_neck' | 'shoulder_arm' | 'trunk' | 'lower_limb';
 export type BodySide = 'left' | 'right' | 'center';
 export type BodyView = 'anterior' | 'posterior';
 export type ViewerMode = 'explore' | 'select' | 'pinpoint';
-export type Gender = 'male' | 'female';
+export type Gender = 'neutral' | 'male' | 'female';
 export type Locale = 'en' | 'ar';
 
 export type BodyRegion = {
@@ -39,11 +39,11 @@ export type PointConfirmPayload = {
   point: [number, number, number];
   normal: [number, number, number];
   uv: [number, number];
-  gender: Gender;
+  gender?: Gender;
 };
 
 export type BodyViewerProps = {
-  gender: Gender;
+  gender?: Gender;
   view: BodyView;
   selectedRegionId?: string | null;
   pins?: PainPin[];

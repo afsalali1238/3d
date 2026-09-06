@@ -130,7 +130,7 @@ type SceneProps = BodyViewerProps & {
 
 function Scene(props: SceneProps) {
   const {
-    gender,
+    gender = 'neutral',
     view,
     selectedRegionId,
     pins,
@@ -447,7 +447,7 @@ function Effects({ enabled }: { enabled: boolean }) {
 /* ------------------------------------------------------------- component */
 
 export function BodyViewer(props: BodyViewerProps) {
-  const { locale = 'en', mode, onPointConfirm, gender } = props;
+  const { locale = 'en', mode, onPointConfirm, gender = 'neutral' } = props;
   const containerRef = useRef<HTMLDivElement>(null);
   const [quality] = useState(detectQuality);
   const [hasWebgl] = useState(webglAvailable);

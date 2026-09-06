@@ -15,16 +15,19 @@ import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.j
 import { createSkinMaterial, type SkinMaterialHandle } from './skinMaterial';
 import type { Gender } from './types';
 
+export const MODEL_URL = '/models/body.glb?v=3';
+
 export const MODEL_URLS: Record<Gender, string> = {
-  male: '/models/body-male.glb?v=2',
-  female: '/models/body-female.glb?v=2',
+  neutral: MODEL_URL,
+  male: MODEL_URL,
+  female: MODEL_URL,
 };
 
 const dracoLoader = new DRACOLoader().setDecoderPath('/decoders/');
 const ktx2Loader = new KTX2Loader().setTranscoderPath('/decoders/');
 
 export type BodyModelProps = {
-  gender: Gender;
+  gender?: Gender;
   breathing: boolean;
   onReady?: (handle: SkinMaterialHandle) => void;
   onPointerMove?: (e: any) => void;
@@ -33,11 +36,12 @@ export type BodyModelProps = {
 };
 
 export const BodyModel = forwardRef<THREE.Mesh, BodyModelProps>(function BodyModel(
-  { gender, breathing, onReady, onPointerMove, onPointerOut, onClick },
+  { gender = 'neutral', breathing, onReady, onPointerMove, onPointerOut, onClick },
   ref,
 ) {
   const gl = useThree((s) => s.gl);
-  const gltf = useLoader(GLTFLoader, MODEL_URLS[gender], (loader) => {
+  const modelUrl = MODEL_URLS[gender] ?? MODEL_URL;
+  const gltf = useLoader(GLTFLoader, modelUrl, (loader) => {
     loader.setDRACOLoader(dracoLoader);
     loader.setKTX2Loader(ktx2Loader.detectSupport(gl));
     loader.setMeshoptDecoder(MeshoptDecoder);
