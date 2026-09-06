@@ -16,8 +16,8 @@ import { createSkinMaterial, type SkinMaterialHandle } from './skinMaterial';
 import type { Gender } from './types';
 
 export const MODEL_URLS: Record<Gender, string> = {
-  male: '/models/body-male.glb',
-  female: '/models/body-female.glb',
+  male: '/models/body-male.glb?v=2',
+  female: '/models/body-female.glb?v=2',
 };
 
 const dracoLoader = new DRACOLoader().setDecoderPath('/decoders/');
