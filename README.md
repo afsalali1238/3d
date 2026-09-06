@@ -30,7 +30,8 @@ npm run dev        # http://localhost:5173
 | `src/components/body/BodyViewer.tsx` | The component — the only surface the app sees |
 | `src/components/body/types.ts` | Public prop/callback types (`BodyRegion`, `PainPin`, …) |
 | `src/components/body/regions.ts` / `regions.gen.ts` | Typed region data: 81 regions, EN/AR labels, focus targets, neighbour graph |
-| `src/components/body/skinMaterial.ts` | Patched `MeshPhysicalMaterial`: wrap-lighting SSS, fresnel backscatter, rim light, in-shader region highlight (guarded `onBeforeCompile`, plain-PBR fallback) |
+| `src/components/body/skinMaterial.ts` | Patched `MeshPhysicalMaterial`: per-channel (R/G/B) diffuse wrap, thickness-driven transmission, baked-AO + curvature cavity shading, triplanar micro-detail, dual specular, in-shader region highlight (guarded `onBeforeCompile`, plain-PBR fallback) |
+| `src/components/body/skinDetail.ts` | Seamless pore / mottle detail map generated procedurally at runtime (no download) and sampled triplanarly — the mesh has no UVs |
 | `src/components/body/useRegionPicker.ts` | Raycast → `_REGIONID` region resolution + 20 px snap for small targets |
 | `src/components/body/CameraRig.tsx` | Damped spherical orbit, ±35° vertical clamp, idle auto-rotate, fly-to-region |
 | `src/components/body/PinMarker.tsx` | Surface-welded draggable pain pins, yellow→red intensity grading |
@@ -38,6 +39,8 @@ npm run dev        # http://localhost:5173
 | `src/components/body/store.ts` | Internal zustand state (never leaks outside the module) |
 | `public/models/` + `ASSET-SPEC.md` | Segmented GLBs + the exact contract for swapping in licensed scans |
 | `scripts/build_body_asset.py` | Asset pipeline: extraction, segmentation, thickness bake, GLB/typed-data generation |
+| `scripts/refine_body_mesh.py` | Render-quality pass: hole filling, denoise, isotropic remesh, AO + curvature bake |
+| `scripts/qa_render.py` | Headless software renderer (numpy) that mirrors the skin shader — review geometry/shading changes without a GPU |
 | `src/App.tsx` | Demo route exercising every mode |
 
 ## Component API
@@ -79,11 +82,33 @@ also a named, tabbable ARIA target.
 ## Performance
 
 - `frameloop="demand"` — renders only during interaction/animation
-- 0.63 MB per body GLB (budget: ≤ 6 MB), 22.4k triangles
+- 205 KB (male) / 188 KB (female) per body GLB (budget: ≤ 6 MB), 66k / 60k triangles
+- shadow maps and post-processing degrade automatically on low-end devices
 - DPR capped at 2, auto-drops to 1.5 when frame time > 20 ms
 - Post-processing (SMAA + high-threshold bloom + vignette + subtle CA)
   disabled automatically on low-end devices; no WebGL → 2D SVG fallback
 - Decoders (Draco/KTX2/Basis) self-hosted in `/public/decoders/`
+
+## Skin rendering
+
+The body carries no textures — everything is computed from four baked vertex
+channels (`_REGIONID`, `_THICKNESS`, `_AO`, `_CURV`) plus a procedurally
+generated detail map:
+
+- **subsurface** — the R/G/B diffuse terminators wrap by different amounts
+  (0.55 / 0.28 / 0.20), so light goes warm before it goes dark, with a
+  thickness-driven transmission term for ears, fingers and the nose
+- **occlusion** — form-factor-baked AO drives indirect light, 45 % of direct
+  light, a crease hue shift and specular occlusion; `_CURV` adds cavity
+  darkening and boosts scattering on convex edges
+- **micro-detail** — a seamless pore / orange-peel / mottle map generated at
+  runtime and sampled triplanarly (no UVs, no download) perturbs the normal,
+  roughness and albedo
+- **specular** — F0 pinned to skin's real 2.8 % reflectance plus a tight
+  secondary lobe, so highlights read wet rather than plastic
+- **lighting** — warm key (with a real PCF-soft shadow map), cool fill, rim,
+  studio HDRI, contact shadows, and a subtle photographic grade (grain,
+  vignette, slight saturation lift)
 
 ## Data attribution
 

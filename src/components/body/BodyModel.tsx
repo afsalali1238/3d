@@ -16,9 +16,9 @@ import { createSkinMaterial, type SkinMaterialHandle } from './skinMaterial';
 import type { Gender } from './types';
 
 export const MODEL_URLS: Record<Gender, string> = {
-  male: '/models/body-male.glb?v=4',
-  female: '/models/body-female.glb?v=4',
-  neutral: '/models/body-male.glb?v=4',
+  male: '/models/body-male.glb?v=5',
+  female: '/models/body-female.glb?v=5',
+  neutral: '/models/body-male.glb?v=5',
 };
 
 const dracoLoader = new DRACOLoader().setDecoderPath('/decoders/');
@@ -58,6 +58,24 @@ export const BodyModel = forwardRef<THREE.Mesh, BodyModelProps>(function BodyMod
     const geo = mesh.geometry as THREE.BufferGeometry;
     if (!geo.getAttribute('_regionid')) {
       console.warn('[BodyViewer] model has no _REGIONID attribute — region picking disabled');
+    }
+    // The skin shader reads baked occlusion/curvature channels. An older or
+    // third-party asset may not have them — fill neutral values rather than
+    // letting the attribute default to 0 and render the body pitch black.
+    const count = geo.getAttribute('position').count;
+    for (const [name, fallback] of [
+      ['_regionid', -1],
+      ['_thickness', 0.08],
+      ['_ao', 1],
+      ['_curv', 0],
+    ] as const) {
+      if (!geo.getAttribute(name)) {
+        console.warn(`[BodyViewer] model has no ${name.toUpperCase()} channel — using ${fallback}`);
+        geo.setAttribute(
+          name,
+          new THREE.BufferAttribute(new Float32Array(count).fill(fallback), 1),
+        );
+      }
     }
     if (!geo.boundingSphere) geo.computeBoundingSphere();
     return mesh;
@@ -99,7 +117,7 @@ export const BodyModel = forwardRef<THREE.Mesh, BodyModelProps>(function BodyMod
         onPointerOut={onPointerOut}
         onClick={onClick}
         castShadow
-        receiveShadow={false}
+        receiveShadow
       />
     </group>
   );

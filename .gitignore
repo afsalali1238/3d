@@ -3,3 +3,7 @@ dist/
 build/
 *.log
 tsconfig.tsbuildinfo
+
+# python bytecode from the asset scripts
+__pycache__/
+*.pyc

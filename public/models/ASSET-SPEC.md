@@ -15,11 +15,42 @@ scans that meet this contract and nothing in the code changes.
 
 Derived from **BodyParts3D "Skin" (FMA7163)**, © The Database Center for Life
 Science, licensed **CC BY 4.0** — see `/public/ATTRIBUTION.md`. The outer
-skin shell was extracted (11.4k verts / 22.4k tris), segmented into 81
-anatomical regions, and baked with a per-vertex thickness channel by
-`scripts/build_body_asset.py`. The female variant is a smooth regional
-reshape of the same scan (a stand-in until a licensed female scan is
-sourced). Each GLB is ~80 KB.
+skin shell was extracted, segmented into 81 anatomical regions and baked with
+a per-vertex thickness channel by `scripts/build_body_asset.py`, then put
+through the render-quality refinement pass below. The female variant is a
+smooth regional reshape of the same scan (a stand-in until a licensed female
+scan is sourced).
+
+| | male | female |
+|---|---|---|
+| vertices / triangles | 32,930 / 65,858 | 29,768 / 59,542 |
+| GLB (Draco) | 205 KB | 188 KB |
+| edge length | 6–10 mm, uniform | 6–10 mm, uniform |
+| boundary edges (holes) | 0 | 0 |
+
+### Render-quality refinement pass
+
+`scripts/refine_body_mesh.py` (run through `scripts/dump-mesh.mjs` →
+`scripts/build-body-glb.mjs`) turns the raw voxel-derived shell into a clean
+render asset. The raw scan was watertight enough to pick against but read as a
+"scan blob" up close: lumpy surface noise, triangle edges from 3 mm to 128 mm,
+and open holes where the eyeballs, armpits and finger webs had been.
+
+1. weld duplicates, drop degenerate faces, repair non-manifold edges
+2. close every boundary loop, then blend the caps into the surrounding
+   surface with dilated constrained Laplacian relaxation (a flat cap over the
+   eyelid rim would otherwise leave a pinched seam); head caps get a ≤ 2.5 mm
+   convex bulge so closed eyelids read as eyelids
+3. Taubin denoise (λ 0.5 / μ −0.53, volume preserving)
+4. curvature-adaptive isotropic remesh to a ~7.8 mm target edge, reprojecting
+   onto the source surface each iteration (max surface deviation 4 mm)
+5. transfer `_REGIONID` (inverse-distance-weighted vote over the 8 nearest
+   source vertices — keeps region borders crisp) and `_THICKNESS` (IDW mean)
+6. bake `_AO` and `_CURV` (see below), recompute area-weighted normals
+
+Result: mean dihedral angle between adjacent faces drops from 10.3° to 4.3°,
+all 81 regions survive, and the segmentation boundaries stay where the
+original build put them.
 
 ### Universal anatomy pass (applied to both bodies)
 
@@ -84,6 +115,20 @@ uniformly afterwards).
   approximated subsurface scattering. If absent, skin renders with plain
   PBR + wrap lighting only.
 
+### Occlusion and curvature channels (recommended)
+- Float vertex attribute **`_AO`** = baked hemispherical ambient occlusion in
+  `[0,1]` (1 = fully open). Baked by `scripts/refine_body_mesh.py` with a disc
+  form-factor solver (Bunnell), which resolves crevices a depth-map bake
+  misses: armpits, groin, finger webs, the fold under the chin, eye sockets.
+  It modulates indirect diffuse/specular exactly like an `aoMap` would, plus
+  45 % of the direct light and a red hue shift (blood pools in creases).
+- Float vertex attribute **`_CURV`** = signed, normalised mean curvature in
+  `[-1,1]` (negative = concave). Drives cavity darkening and curvature-boosted
+  subsurface scattering on convex edges.
+- Both are optional: `BodyModel.tsx` fills neutral values (`_AO` = 1,
+  `_CURV` = 0) and logs a warning if an asset does not carry them, so a
+  third-party GLB never renders black.
+
 ### Textures (optional but recommended for production)
 All textures **KTX2/Basis compressed** (never raw PNG at runtime), placed in
 `/public/textures/`:
@@ -121,12 +166,32 @@ crash, show a blank canvas, or silently substitute a low-quality mesh.
 # source data: clone of github.com/ashemag/human-atlas (BodyParts3D chunks)
 ATLAS_DIR=/path/to/human-atlas/public/models python3 scripts/build_body_asset.py
 python3 scripts/build_studio_hdr.py
-./scripts/compress-models.sh   # Draco: ~634 KB -> ~80 KB per body
-node scripts/neutralise-universal.mjs  # universal anatomy (Draco in/out)
+./scripts/compress-models.sh          # Draco: ~634 KB -> ~80 KB per body
+node scripts/neutralise-universal.mjs # universal anatomy (Draco in/out)
+
+# render-quality refinement (adds ~120 KB per body, all of it worth it)
+pip install numpy scipy pymeshlab pillow
+for g in male female; do
+  node scripts/dump-mesh.mjs public/models/body-$g.glb build/$g.bvmesh
+  python3 scripts/refine_body_mesh.py build/$g.bvmesh build/$g-refined.bvmesh
+  node scripts/build-body-glb.mjs build/$g-refined.bvmesh public/models/body-$g.glb
+done
+cp public/models/body-male.glb public/models/body.glb
+
+# QA (software renderer — no GPU, no browser needed)
+python3 scripts/qa_render.py build/male-refined.bvmesh build/qa.png \
+        --view three4,torso,face --mode shaded   # also: ao, regions, normals, curvature
+python3 scripts/mesh_report.py build/male-refined.bvmesh
 ```
 
-The `_REGIONID` channel survives Draco quantization integer-exact (all 81
-region ids verified after a compress/decompress round trip).
+`pymeshlab` wheels link against `libGL`; on a headless box without it, build a
+stub once (`gcc -shared -fPIC -o libGL.so.1 stub.c` exporting the undefined
+`gl*` symbols) and point `LD_LIBRARY_PATH` at it — none of the filters used
+here touch the GPU.
+
+The `_REGIONID` channel survives Draco quantization (12-bit position, 10-bit
+normal, 10-bit generic) integer-exact after rounding — all 81 region ids
+verified after a compress/decompress round trip, and the picker rounds anyway.
 
 Outputs: both GLBs, `regions.gen.ts` (typed region table with focus targets
 and neighbour graph), `fallbackShapes.gen.ts` (2D projected outlines for the

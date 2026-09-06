@@ -19,11 +19,15 @@ import { Canvas, useFrame, useThree, invalidate } from '@react-three/fiber';
 import { ContactShadows, Environment, Html, useProgress } from '@react-three/drei';
 import {
   Bloom,
+  BrightnessContrast,
   ChromaticAberration,
   EffectComposer,
+  HueSaturation,
+  Noise,
   SMAA,
   Vignette,
 } from '@react-three/postprocessing';
+import { BlendFunction } from 'postprocessing';
 import * as THREE from 'three';
 import { BodyModel, PlaceholderBody } from './BodyModel';
 import { CameraRig } from './CameraRig';
@@ -38,11 +42,14 @@ import './bodyViewer.css';
 
 /* ------------------------------------------------------------------ perf */
 
-function detectQuality(): { post: boolean; dpr: [number, number] } {
+function detectQuality(): { post: boolean; shadows: boolean; dpr: [number, number] } {
   const cores = typeof navigator !== 'undefined' ? navigator.hardwareConcurrency ?? 4 : 4;
   const dpr = typeof window !== 'undefined' ? window.devicePixelRatio : 1;
   const lowEnd = cores <= 4 && dpr > 1.5; // typical low/mid mobile
-  return { post: !lowEnd, dpr: [1, 2] };
+  // shadow maps stay on everywhere except the weakest devices: with
+  // frameloop="demand" they cost one extra pass per rendered frame, not per
+  // second, and they are what stops the figure looking like it floats
+  return { post: !lowEnd, shadows: !(cores <= 4 && dpr > 2), dpr: [1, 2] };
 }
 
 function webglAvailable(): boolean {
@@ -146,6 +153,7 @@ function Scene(props: SceneProps) {
   } = props;
 
   const meshRef = useRef<THREE.Mesh>(null);
+  const keyLightRef = useRef<THREE.DirectionalLight>(null);
   const handleRef = useRef<SkinMaterialHandle | null>(null);
   const { pick, eventToNdc, resolveHit } = useRegionPicker(meshRef);
   const gl = useThree((s) => s.gl);
@@ -341,17 +349,31 @@ function Scene(props: SceneProps) {
       <CameraRig enabled />
       <AdaptiveDpr />
 
-      {/* three-point rig over the HDRI ambient */}
+      {/* Three-point studio rig over the HDRI ambient.
+          The key casts a real soft shadow map (chin on neck, arms on torso,
+          thighs on each other) — the single biggest realism win after the
+          baked AO, and cheap here because frameloop is "demand". */}
       <directionalLight
-        position={[-1.6, 2.6, 2.2]}
-        intensity={2.0}
-        color="#fff4e6"
-        castShadow={false}
+        ref={keyLightRef}
+        position={[-1.7, 2.7, 2.3]}
+        intensity={2.1}
+        color="#fff2e2"
+        castShadow
+        shadow-mapSize-width={1024}
+        shadow-mapSize-height={1024}
+        shadow-bias={-0.0006}
+        shadow-normalBias={0.022}
+        shadow-radius={5}
+        shadow-camera-near={0.5}
+        shadow-camera-far={8}
+        shadow-camera-left={-1.2}
+        shadow-camera-right={1.2}
+        shadow-camera-top={2.2}
+        shadow-camera-bottom={-0.4}
       />
-      <directionalLight position={[1.8, 1.4, 1.6]} intensity={0.6} color="#e6f0ff" />
-      <directionalLight position={[0.4, 2.8, -2.4]} intensity={1.5} color="#ffffff" />
-
-      <Environment files="/textures/studio.hdr" environmentIntensity={0.6} background={false} />
+      <directionalLight position={[1.9, 1.3, 1.5]} intensity={0.42} color="#dce8ff" />
+      <directionalLight position={[0.4, 2.6, -2.5]} intensity={1.25} color="#fffaf4" />
+      <Environment files="/textures/studio.hdr" environmentIntensity={0.85} background={false} />
 
       <ModelBoundary
         onError={onError}
@@ -380,11 +402,12 @@ function Scene(props: SceneProps) {
 
       <ContactShadows
         position={[0, 0.002, 0]}
-        opacity={0.5}
-        blur={2.5}
-        far={1.4}
-        resolution={512}
-        scale={2.4}
+        opacity={0.62}
+        blur={2.2}
+        far={1.1}
+        resolution={1024}
+        scale={2.6}
+        color="#0a0d12"
         frames={1}
       />
 
@@ -433,13 +456,20 @@ function Effects({ enabled }: { enabled: boolean }) {
       <SMAA />
       {/* threshold above 1.0: skin (tone-mapped, <=1) can never bloom — only
           the tone-mapping-exempt pin markers and highlight glow do */}
-      <Bloom intensity={0.25} luminanceThreshold={1.05} luminanceSmoothing={0.15} mipmapBlur />
-      <Vignette eskil={false} offset={0.18} darkness={0.55} />
+      <Bloom intensity={0.22} luminanceThreshold={1.05} luminanceSmoothing={0.15} mipmapBlur />
+      {/* photographic grade: lift the shadows slightly off pure black, keep a
+          touch of contrast, then a hair of saturation for warm skin */}
+      <BrightnessContrast brightness={0.005} contrast={0.055} />
+      <HueSaturation saturation={0.06} hue={0} />
+      <Vignette eskil={false} offset={0.2} darkness={0.6} />
       <ChromaticAberration
-        offset={[0.00025, 0.00025] as any}
+        offset={[0.00022, 0.00022] as any}
         radialModulation={false}
         modulationOffset={0}
       />
+      {/* very fine grain: breaks up gradient banding on large skin areas and
+          stops the render looking like flat CG plastic */}
+      <Noise premultiply opacity={0.028} blendFunction={BlendFunction.OVERLAY} />
     </EffectComposer>
   );
 }
@@ -488,10 +518,11 @@ export function BodyViewer(props: BodyViewerProps) {
       <Canvas
         frameloop="demand"
         dpr={quality.dpr}
+        shadows={quality.shadows ? { type: THREE.PCFSoftShadowMap } : false}
         gl={{
           antialias: true,
           toneMapping: THREE.ACESFilmicToneMapping,
-          toneMappingExposure: 1.05,
+          toneMappingExposure: 1.0,
           outputColorSpace: THREE.SRGBColorSpace,
           powerPreference: 'high-performance',
         }}
