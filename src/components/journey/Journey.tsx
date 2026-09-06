@@ -12,7 +12,7 @@ import { CONTENT } from '../../content/bundle.gen';
 import { areaForRegion, questionsFor, resolveOutcome, type Answers, type Profile } from '../../content/routing';
 import { loadConsent, saveConsent } from '../../privacy/consent';
 import { clearAllPatientData, type PersistMode } from '../../privacy/storage';
-import { evaluateRedFlags, publishedRedFlags, redFlagScreenReady } from '../../safety/redFlags';
+import { evaluateRedFlags, publishedRedFlags } from '../../safety/redFlags';
 import { evaluatePrecautions, publishedPrecautions, applyPrecautionHide } from '../../safety/precautions';
 import { evaluateEscalationRules, thresholdValue } from '../../safety/escalationRules';
 import { startEpisode, loadEpisode, appendSession } from '../../episode/store';
@@ -96,7 +96,6 @@ const COPY = {
     print: 'اطبع ملخصاً للموعد',
     clear: 'امسح بياناتي',
     contact: 'تواصل مع العيادة',
-    demo: 'محتوى تجريبي — ليس نصيحة طبية',
     stopped: 'لن نخمّن.',
     browse: 'خريطة الجسم',
     text: 'حجم النص',
@@ -156,16 +155,6 @@ export default function Journey() {
     setStep('red_flags');
   };
 
-  const finishRedFlags = () => {
-    if (!redFlagScreenReady(CONTENT)) {
-      setStep('stopped');
-      return;
-    }
-    const ev = evaluateRedFlags(CONTENT, rfAnswers);
-    if (ev.stopped) stopWith(ev.messageId);
-    else setStep('precautions');
-  };
-
   const finishPrecautions = () => {
     const ev = evaluatePrecautions(CONTENT, precKeys);
     if (ev.kind === 'stop') stopWith(ev.messageId);
@@ -199,8 +188,6 @@ export default function Journey() {
     }
     setStep('area_qs');
   };
-
-  const areaQuestions = bodyArea ? questionsFor(CONTENT, bodyArea) : [];
 
   const outcome = useMemo(() => {
     if (!bodyArea) return null;
@@ -286,25 +273,9 @@ export default function Journey() {
               {rfIndex + 1} / {flags.length}
             </p>
             <h2 className="gf-prompt">{flags[rfIndex].prompt[locale]}</h2>
-            <div className="gf-chips">
+            <div className="yn">
               <button
-                className={`gf-chip${rfAnswers[flags[rfIndex].id] === flags[rfIndex].positiveKey ? ' on' : ''}`}
-                onClick={() => {
-                  const f = flags[rfIndex];
-                  const next = { ...rfAnswers, [f.id]: f.positiveKey };
-                  setRfAnswers(next);
-                  if (rfIndex + 1 < flags.length) setRfIndex(rfIndex + 1);
-                  else {
-                    const ev = evaluateRedFlags(CONTENT, next);
-                    if (ev.stopped) stopWith(ev.messageId);
-                    else setStep('precautions');
-                  }
-                }}
-              >
-                {t.yes}
-              </button>
-              <button
-                className={`gf-chip${rfAnswers[flags[rfIndex].id] === 'no' ? ' on' : ''}`}
+                className="gf-btn yn-no"
                 onClick={() => {
                   const f = flags[rfIndex];
                   const next = { ...rfAnswers, [f.id]: 'no' };
@@ -319,6 +290,22 @@ export default function Journey() {
               >
                 {t.no}
               </button>
+              <button
+                className="gf-btn yn-yes"
+                onClick={() => {
+                  const f = flags[rfIndex];
+                  const next = { ...rfAnswers, [f.id]: f.positiveKey };
+                  setRfAnswers(next);
+                  if (rfIndex + 1 < flags.length) setRfIndex(rfIndex + 1);
+                  else {
+                    const ev = evaluateRedFlags(CONTENT, next);
+                    if (ev.stopped) stopWith(ev.messageId);
+                    else setStep('precautions');
+                  }
+                }}
+              >
+                {t.yes}
+              </button>
             </div>
           </section>
         )}
@@ -327,13 +314,13 @@ export default function Journey() {
           <section className="gf">
             <h2>{t.precTitle}</h2>
             <p className="gf-hint">{t.precSub}</p>
-            <div className="gf-chips">
+            <div className="prec-list">
               {precs.map((p) => {
                 const on = precKeys.includes(p.conditionKey);
                 return (
                   <button
                     key={p.conditionKey}
-                    className={`gf-chip${on ? ' on' : ''}`}
+                    className={`prec-item${on ? ' on' : ''}`}
                     onClick={() => {
                       if (p.conditionKey === 'none' || p.conditionKey === 'prefer_not_to_say') {
                         setPrecKeys([p.conditionKey]);
@@ -350,7 +337,7 @@ export default function Journey() {
                 );
               })}
             </div>
-            <div className="gf-actions">
+            <div className="gf-actions sticky-cta">
               <button className="gf-btn gf-btn-primary" disabled={precKeys.length === 0} onClick={finishPrecautions}>
                 {t.continue}
               </button>
@@ -388,7 +375,7 @@ export default function Journey() {
               <div className="viewer-search">
                 <RegionSearch locale={locale} selectedRegionId={selectedRegionId} onSelect={pickRegion} />
               </div>
-              <div className="viewer-toolbar">
+              <div className="map-dock">
                 <div className="seg">
                   <button className={view === 'anterior' ? 'on' : ''} onClick={() => setView('anterior')}>
                     {locale === 'ar' ? 'أمامي' : 'Front'}
@@ -405,32 +392,24 @@ export default function Journey() {
                     {locale === 'ar' ? 'أنثى' : 'Female'}
                   </button>
                 </div>
-                <button
-                  className="ghost"
-                  onClick={() => {
-                    setSelectedRegionId(null);
-                    setResetSignal((n) => n + 1);
-                  }}
-                >
-                  {locale === 'ar' ? 'إعادة الضبط' : 'Reset view'}
+                <button className="ghost" onClick={() => setShowList(true)}>
+                  {locale === 'ar' ? 'قائمة' : 'List'}
                 </button>
               </div>
-              <button className="cant-find" onClick={() => setShowList(true)}>
-                {locale === 'ar' ? 'لا أستطيع إيجاده' : "I can't find it"}
-              </button>
             </div>
-            <aside className="side-panel">
-              <section>
-                <h2>{locale === 'ar' ? 'المنطقة المحددة' : 'Selected'}</h2>
-                <div className="selected-box">{selectedRegionId ? regionLabel(selectedRegionId, locale) : '—'}</div>
-                {bodyArea && (
-                  <div className="gf-actions sticky-cta">
-                    <button className="gf-btn gf-btn-primary body-cta" onClick={goSymptoms}>
-                      {t.continue}
-                    </button>
-                  </div>
-                )}
-              </section>
+            <aside className={`map-sheet${selectedRegionId ? ' open' : ''}`}>
+              <p className="map-hint">
+                {selectedRegionId
+                  ? regionLabel(selectedRegionId, locale)
+                  : locale === 'ar'
+                    ? 'اضغط على المكان في الجسم'
+                    : 'Tap where it is on the body'}
+              </p>
+              {bodyArea && (
+                <button className="gf-btn gf-btn-primary body-cta" onClick={goSymptoms}>
+                  {t.continue}
+                </button>
+              )}
             </aside>
           </div>
         )}
