@@ -1,0 +1,118 @@
+/* Region search — logical properties throughout so RTL is free. */
+
+.rs-root {
+  position: relative;
+  inline-size: 100%;
+}
+
+.rs-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-inline: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.6);
+  transition: border-color 140ms;
+}
+
+.rs-field:focus-within {
+  border-color: rgba(0, 212, 168, 0.7);
+  box-shadow: 0 0 0 3px rgba(0, 212, 168, 0.15);
+}
+
+.rs-icon {
+  inline-size: 18px;
+  block-size: 18px;
+  flex: none;
+  color: #94a3b8;
+}
+
+.rs-input {
+  flex: 1;
+  min-inline-size: 0;
+  padding-block: 11px;
+  border: 0;
+  background: transparent;
+  color: #e2e8f0;
+  font: inherit;
+  font-size: 15px;
+  outline: none;
+}
+
+.rs-input::placeholder { color: #64748b; }
+.rs-input::-webkit-search-cancel-button { display: none; }
+
+.rs-clear {
+  flex: none;
+  inline-size: 24px;
+  block-size: 24px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(148, 163, 184, 0.18);
+  color: #cbd5e1;
+  font-size: 17px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.rs-clear:hover { background: rgba(148, 163, 184, 0.32); }
+
+.rs-list {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-start: calc(100% + 6px);
+  z-index: 20;
+  max-block-size: 320px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 12px;
+  background: #0f172a;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.5);
+}
+
+.rs-opt {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  color: #e2e8f0;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.rs-opt.on { background: rgba(0, 212, 168, 0.16); }
+.rs-opt.cur .rs-opt-label { color: #00d4a8; }
+
+.rs-opt-via {
+  flex: none;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.rs-empty {
+  padding: 12px;
+  color: #94a3b8;
+  font-size: 14px;
+}
+
+/* visually hidden but announced */
+.rs-sr {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rs-field { transition: none; }
+}

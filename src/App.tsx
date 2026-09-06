@@ -4,7 +4,8 @@
  * and talks to the 3D module exclusively through the BodyViewer prop API.
  */
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import BodyViewer from './components/body/BodyViewer';
+import BodyViewerLazy from './components/body/BodyViewerLazy';
+import RegionSearch from './components/search/RegionSearch';
 import { GROUP_LABELS, REGIONS, REGION_BY_ID, regionLabel } from './components/body/regions';
 import type {
   BodyView,
@@ -164,7 +165,7 @@ export default function App() {
 
       <main className="app-main">
         <div className="viewer-wrap">
-          <BodyViewer
+          <BodyViewerLazy
             gender={gender}
             view={view}
             mode={mode}
@@ -178,6 +179,17 @@ export default function App() {
             onPointConfirm={handleConfirm}
             onError={(e) => console.error('BodyViewer error:', e)}
           />
+
+          <div className="viewer-search">
+            <RegionSearch
+              locale={locale}
+              selectedRegionId={selectedRegionId}
+              onSelect={(id) => {
+                setSelectedRegionId(id);
+                setMode('pinpoint');
+              }}
+            />
+          </div>
 
           {/* viewer chrome */}
           <div className="viewer-toolbar">
