@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import type { Exercise, Locale } from '../../content/types';
 import MotionGuide, { type MotionKind } from './MotionGuide';
+import MoveClip from './MoveClip';
 import './exercise.css';
 
 const FRAMES: Record<string, string[]> = {
@@ -32,7 +33,7 @@ const MOTION: Record<string, MotionKind> = {
 const CAPTION: Record<string, { en: [string, string]; ar: [string, string] }> = {
   lb_ex_pelvic_tilt: { en: ['Rest', 'Flatten'], ar: ['راحة', 'تسطيح'] },
   lb_ex_knee_to_chest: { en: ['Start', 'Draw in'], ar: ['بداية', 'سحب'] },
-  lb_ex_cat_camel: { en: ['Round', 'Sag'], ar: ['تقويس', 'إنزال'] },
+  lb_ex_cat_camel: { en: ['Round up', 'Let down'], ar: ['تقويس لأعلى', 'إنزال'] },
   lb_ex_sit_stand: { en: ['Sit', 'Stand'], ar: ['جلوس', 'وقوف'] },
   nk_ex_chin_tuck: { en: ['Start', 'Tuck'], ar: ['بداية', 'سحب'] },
   nk_ex_neck_turn: { en: ['Ahead', 'Turn'], ar: ['أمام', 'التفاف'] },
@@ -52,35 +53,26 @@ export default function ExerciseCard({ exercise: e, locale, session }: Props) {
   const frames = FRAMES[e.id] ?? [];
   const motion = MOTION[e.id] ?? 'tilt';
   const captions = CAPTION[e.id]?.[locale];
-  const [i, setI] = useState(0);
   const [playing, setPlaying] = useState(true);
-
-  useEffect(() => {
-    if (!playing || frames.length < 2) return;
-    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (reduce) return;
-    const t = window.setInterval(() => setI((n) => (n + 1) % frames.length), 1100);
-    return () => window.clearInterval(t);
-  }, [playing, frames.length]);
+  const watch = locale === 'ar' ? 'شاهد الحركة' : 'Watch the movement';
 
   return (
     <article className={`ex-card${session ? ' session' : ''}`}>
       <div className="ex-stage">
-        <div className="ex-media">
-          {frames.map((src, n) => (
-            <img key={src} src={src} alt="" className={n === i ? 'on' : ''} />
-          ))}
-          <button
-            type="button"
-            className="ex-play"
-            aria-pressed={playing}
-            onClick={() => setPlaying((p) => !p)}
-          >
-            {playing ? '❚❚' : '▶'}
-          </button>
-          {captions && <span className="ex-cap">{captions[i] ?? captions[0]}</span>}
+        {frames.length >= 2 ? (
+          <MoveClip
+            frames={frames}
+            captions={captions}
+            playing={playing}
+            onToggle={() => setPlaying((p) => !p)}
+          />
+        ) : (
+          <div className="clip">{frames[0] && <img src={frames[0]} alt="" style={{ opacity: 1 }} />}</div>
+        )}
+        <div className="ex-guide">
+          <p className="ex-guide-label">{watch}</p>
+          <MotionGuide kind={motion} />
         </div>
-        <MotionGuide kind={motion} />
       </div>
       <div className="ex-body">
         <h3>{e.name[locale]}</h3>
