@@ -78,6 +78,15 @@ function goodFiles(): SourceFiles {
       ['route_id', 'body_area', 'answer_path', 'outcome', 'exercise_ids', 'escalation_message_id', 'status', 'reviewed_by', 'reviewed_on'],
       [{ route_id: 'r1', body_area: 'lower_back', answer_path: 'movement=bending', outcome: 'exercises', exercise_ids: 'ex1', escalation_message_id: '', status: 'published', reviewed_by: 'Dr X', reviewed_on: '2026-09-06' }],
     ),
+    'red_flags.csv': toCsv(
+      ['flag_id', 'prompt_en', 'prompt_ar', 'positive_key', 'message_id', 'order', 'status', 'reviewed_by', 'reviewed_on'],
+      [],
+    ),
+    'precautions.csv': toCsv(
+      ['condition_key', 'label_en', 'label_ar', 'restricts_tags', 'restricts_ids', 'action', 'message_id', 'status', 'reviewed_by', 'reviewed_on'],
+      [],
+    ),
+    'thresholds.csv': toCsv(['key', 'value', 'status', 'reviewed_by', 'reviewed_on'], []),
   };
 }
 

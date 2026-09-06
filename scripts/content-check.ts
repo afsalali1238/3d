@@ -15,6 +15,9 @@ const NAMES: Array<keyof SourceFiles> = [
   'escalation_messages.csv',
   'exercises.csv',
   'routes.csv',
+  'red_flags.csv',
+  'precautions.csv',
+  'thresholds.csv',
 ];
 
 const missing = NAMES.filter((n) => !existsSync(`content/${n}`));

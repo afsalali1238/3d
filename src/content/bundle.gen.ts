@@ -89,6 +89,158 @@ export const CONTENT: ContentBundle = {
       "reviewedOn": "2026-09-06"
     },
     {
+      "id": "g_onset",
+      "bodyArea": "global",
+      "key": "onset",
+      "prompt": {
+        "en": "Did this start after a particular activity, or has it been around for a while?",
+        "ar": "هل بدأ هذا بعد نشاط معيّن، أم أنه موجود منذ فترة؟"
+      },
+      "options": [
+        {
+          "id": "g_onset_a",
+          "key": "new_after_activity",
+          "label": {
+            "en": "New, after an activity",
+            "ar": "جديد، بعد نشاط"
+          }
+        },
+        {
+          "id": "g_onset_b",
+          "key": "long_standing",
+          "label": {
+            "en": "It has been around for a while",
+            "ar": "موجود منذ فترة"
+          }
+        }
+      ],
+      "order": 1,
+      "skippable": false,
+      "status": "published",
+      "reviewedBy": "PLACEHOLDER",
+      "reviewedOn": "2026-09-06"
+    },
+    {
+      "id": "g_duration",
+      "bodyArea": "global",
+      "key": "duration",
+      "prompt": {
+        "en": "Roughly how long has it been present?",
+        "ar": "منذ متى تقريباً وهو موجود؟"
+      },
+      "options": [
+        {
+          "id": "g_dur_a",
+          "key": "days",
+          "label": {
+            "en": "A few days",
+            "ar": "بضعة أيام"
+          }
+        },
+        {
+          "id": "g_dur_b",
+          "key": "weeks",
+          "label": {
+            "en": "A few weeks",
+            "ar": "بضعة أسابيع"
+          }
+        },
+        {
+          "id": "g_dur_c",
+          "key": "months",
+          "label": {
+            "en": "Months or longer",
+            "ar": "أشهر أو أكثر"
+          }
+        }
+      ],
+      "order": 2,
+      "skippable": true,
+      "status": "published",
+      "reviewedBy": "PLACEHOLDER",
+      "reviewedOn": "2026-09-06"
+    },
+    {
+      "id": "g_irritability",
+      "bodyArea": "global",
+      "key": "irritability",
+      "prompt": {
+        "en": "If it gets stirred up, how long before it settles?",
+        "ar": "إذا اشتد، كم يمضي قبل أن يهدأ؟"
+      },
+      "options": [
+        {
+          "id": "g_irr_a",
+          "key": "quick",
+          "label": {
+            "en": "It settles quickly",
+            "ar": "يهدأ بسرعة"
+          }
+        },
+        {
+          "id": "g_irr_b",
+          "key": "hours",
+          "label": {
+            "en": "An hour or two",
+            "ar": "ساعة أو ساعتان"
+          }
+        },
+        {
+          "id": "g_irr_c",
+          "key": "day",
+          "label": {
+            "en": "The rest of the day",
+            "ar": "بقية اليوم"
+          }
+        }
+      ],
+      "order": 3,
+      "skippable": false,
+      "status": "published",
+      "reviewedBy": "PLACEHOLDER",
+      "reviewedOn": "2026-09-06"
+    },
+    {
+      "id": "g_pattern",
+      "bodyArea": "global",
+      "key": "pattern",
+      "prompt": {
+        "en": "When in the day does it tend to bother you most?",
+        "ar": "في أي وقت من اليوم يزعجك أكثر؟"
+      },
+      "options": [
+        {
+          "id": "g_pat_a",
+          "key": "morning",
+          "label": {
+            "en": "Worse in the morning",
+            "ar": "أسوأ في الصباح"
+          }
+        },
+        {
+          "id": "g_pat_b",
+          "key": "sitting",
+          "label": {
+            "en": "Worse with sitting",
+            "ar": "أسوأ مع الجلوس"
+          }
+        },
+        {
+          "id": "g_pat_c",
+          "key": "activity",
+          "label": {
+            "en": "Worse with activity",
+            "ar": "أسوأ مع النشاط"
+          }
+        }
+      ],
+      "order": 4,
+      "skippable": true,
+      "status": "published",
+      "reviewedBy": "PLACEHOLDER",
+      "reviewedOn": "2026-09-06"
+    },
+    {
       "id": "lb_q2",
       "bodyArea": "lower_back",
       "key": "timing",
@@ -361,6 +513,197 @@ export const CONTENT: ContentBundle = {
         "ar": "ما وصفته يحتاج إلى تقييم مباشر من أخصائي علاج طبيعي قبل البدء بأي تمارين. هذا ليس داعياً للقلق، لكنه يعني ببساطة أن التمارين ليست الخطوة التالية المناسبة قبل الفحص. يرجى التواصل معنا لتحديد موعد."
       },
       "cta": "contact",
+      "status": "published",
+      "reviewedBy": "PLACEHOLDER",
+      "reviewedOn": "2026-09-06"
+    }
+  ],
+  "redFlags": [
+    {
+      "id": "rf_trauma",
+      "prompt": {
+        "en": "Did this start after a fall, a collision, or another significant impact?",
+        "ar": "هل بدأ هذا بعد سقوط أو اصطدام أو تأثير قوي؟"
+      },
+      "positiveKey": "yes",
+      "messageId": "esc_see_someone",
+      "order": 1,
+      "status": "published",
+      "reviewedBy": "PLACEHOLDER",
+      "reviewedOn": "2026-09-06"
+    },
+    {
+      "id": "rf_neuro",
+      "prompt": {
+        "en": "Are you noticing new numbness, tingling that is spreading, or weakness in an arm or a leg?",
+        "ar": "هل تلاحظ خدراً جديداً أو تنميلاً منتشراً أو ضعفاً في ذراع أو ساق؟"
+      },
+      "positiveKey": "yes",
+      "messageId": "esc_see_someone",
+      "order": 2,
+      "status": "published",
+      "reviewedBy": "PLACEHOLDER",
+      "reviewedOn": "2026-09-06"
+    },
+    {
+      "id": "rf_night",
+      "prompt": {
+        "en": "Does pain wake you at night and stay with you even after you change position?",
+        "ar": "هل يوقظك الألم ليلاً ويبقى حتى بعد تغيير وضعيتك؟"
+      },
+      "positiveKey": "yes",
+      "messageId": "esc_see_someone",
+      "order": 3,
+      "status": "published",
+      "reviewedBy": "PLACEHOLDER",
+      "reviewedOn": "2026-09-06"
+    },
+    {
+      "id": "rf_bladder",
+      "prompt": {
+        "en": "Have you noticed a change in bladder or bowel control that is new for you?",
+        "ar": "هل لاحظت تغيراً جديداً في التحكم بالمثانة أو الأمعاء؟"
+      },
+      "positiveKey": "yes",
+      "messageId": "esc_see_someone",
+      "order": 4,
+      "status": "published",
+      "reviewedBy": "PLACEHOLDER",
+      "reviewedOn": "2026-09-06"
+    },
+    {
+      "id": "rf_weight",
+      "prompt": {
+        "en": "Have you lost weight without trying, alongside this pain?",
+        "ar": "هل فقدت وزناً دون محاولة، مع هذا الألم؟"
+      },
+      "positiveKey": "yes",
+      "messageId": "esc_see_someone",
+      "order": 5,
+      "status": "published",
+      "reviewedBy": "PLACEHOLDER",
+      "reviewedOn": "2026-09-06"
+    },
+    {
+      "id": "rf_chest",
+      "prompt": {
+        "en": "Do you get chest tightness, unusual breathlessness, or arm pain with effort?",
+        "ar": "هل تشعر بضيق في الصدر أو ضيق نفس غير معتاد أو ألم في الذراع مع الجهد؟"
+      },
+      "positiveKey": "yes",
+      "messageId": "esc_see_someone",
+      "order": 6,
+      "status": "published",
+      "reviewedBy": "PLACEHOLDER",
+      "reviewedOn": "2026-09-06"
+    }
+  ],
+  "precautions": [
+    {
+      "conditionKey": "none",
+      "label": {
+        "en": "None of these",
+        "ar": "لا شيء من هذا"
+      },
+      "restrictsTags": [],
+      "restrictsIds": [],
+      "action": "warn",
+      "messageId": "esc_see_someone",
+      "status": "published",
+      "reviewedBy": "PLACEHOLDER",
+      "reviewedOn": "2026-09-06"
+    },
+    {
+      "conditionKey": "prefer_not_to_say",
+      "label": {
+        "en": "Prefer not to say",
+        "ar": "أفضل عدم الإفصاح"
+      },
+      "restrictsTags": [],
+      "restrictsIds": [],
+      "action": "warn",
+      "messageId": "esc_see_someone",
+      "status": "published",
+      "reviewedBy": "PLACEHOLDER",
+      "reviewedOn": "2026-09-06"
+    },
+    {
+      "conditionKey": "recent_surgery",
+      "label": {
+        "en": "Recent surgery in the last 3 months",
+        "ar": "عملية جراحية خلال الأشهر الثلاثة الماضية"
+      },
+      "restrictsTags": [],
+      "restrictsIds": [],
+      "action": "stop_and_refer",
+      "messageId": "esc_see_someone",
+      "status": "published",
+      "reviewedBy": "PLACEHOLDER",
+      "reviewedOn": "2026-09-06"
+    },
+    {
+      "conditionKey": "balance_concern",
+      "label": {
+        "en": "A balance problem that makes standing unaided unsafe",
+        "ar": "مشكلة في التوازن تجعل الوقوف دون مساعدة غير آمن"
+      },
+      "restrictsTags": [],
+      "restrictsIds": [
+        "lb_ex_sit_stand"
+      ],
+      "action": "hide",
+      "messageId": "esc_see_someone",
+      "status": "published",
+      "reviewedBy": "PLACEHOLDER",
+      "reviewedOn": "2026-09-06"
+    },
+    {
+      "conditionKey": "pregnancy_or_postpartum",
+      "label": {
+        "en": "Currently pregnant or within 6 weeks after birth",
+        "ar": "حامل حالياً أو خلال ستة أسابيع بعد الولادة"
+      },
+      "restrictsTags": [],
+      "restrictsIds": [],
+      "action": "stop_and_refer",
+      "messageId": "esc_see_someone",
+      "status": "published",
+      "reviewedBy": "PLACEHOLDER",
+      "reviewedOn": "2026-09-06"
+    }
+  ],
+  "thresholds": [
+    {
+      "key": "nrs_referral",
+      "value": 8,
+      "status": "published",
+      "reviewedBy": "PLACEHOLDER",
+      "reviewedOn": "2026-09-06"
+    },
+    {
+      "key": "amber_window_hours",
+      "value": 24,
+      "status": "published",
+      "reviewedBy": "PLACEHOLDER",
+      "reviewedOn": "2026-09-06"
+    },
+    {
+      "key": "rising_sessions_n",
+      "value": 3,
+      "status": "published",
+      "reviewedBy": "PLACEHOLDER",
+      "reviewedOn": "2026-09-06"
+    },
+    {
+      "key": "review_weeks",
+      "value": 6,
+      "status": "published",
+      "reviewedBy": "PLACEHOLDER",
+      "reviewedOn": "2026-09-06"
+    },
+    {
+      "key": "reminder_days",
+      "value": 21,
       "status": "published",
       "reviewedBy": "PLACEHOLDER",
       "reviewedOn": "2026-09-06"

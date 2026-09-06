@@ -22,6 +22,7 @@ type Props = {
   locale: Locale;
   profile: Profile;
   onExit: () => void;
+  onContinueToSession?: () => void;
 };
 
 const S = {
@@ -62,7 +63,7 @@ const S = {
   },
 } as const;
 
-export function GuidedFlow({ bundle, bodyArea, locale, profile, onExit }: Props) {
+export function GuidedFlow({ bundle, bodyArea, locale, profile, onExit, onContinueToSession }: Props) {
   const t = S[locale];
   const questions = useMemo(() => questionsFor(bundle, bodyArea), [bundle, bodyArea]);
   const [step, setStep] = useState(0);
@@ -162,6 +163,11 @@ export function GuidedFlow({ bundle, bodyArea, locale, profile, onExit }: Props)
         </ol>
 
         <div className="gf-actions">
+          {onContinueToSession && (
+            <button className="gf-btn gf-btn-primary" onClick={onContinueToSession}>
+              {locale === 'ar' ? 'ابدأ الجلسة' : 'Start this session'}
+            </button>
+          )}
           <button className="gf-btn" onClick={() => window.print()}>
             {t.print}
           </button>
