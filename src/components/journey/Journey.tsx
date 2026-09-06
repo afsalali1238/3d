@@ -42,10 +42,9 @@ type Step =
 const COPY = {
   en: {
     app: 'Home programme',
-    notAdvice: 'This follows your physiotherapist’s programme. It does not tell you what is wrong.',
-    consentTitle: 'Before we start',
-    consentBody:
-      'We will ask a few questions about how you feel. Answers stay on this device. Nothing is sent anywhere. No account. You can clear everything in one tap.',
+    notAdvice: 'Follows your physiotherapist’s programme.',
+    consentTitle: 'Find your exercises',
+    consentBody: 'Just a few quick details, then you tap where it hurts. Your answers stay on this device. Nothing is sent anywhere.',
     notMine: 'This is not my device — keep answers for this visit only',
     agree: 'I understand — continue',
     yes: 'Yes',
@@ -75,10 +74,9 @@ const COPY = {
   },
   ar: {
     app: 'البرنامج المنزلي',
-    notAdvice: 'هذا يتبع برنامج أخصائي العلاج الطبيعي. لا يخبرك ما المشكلة.',
-    consentTitle: 'قبل أن نبدأ',
-    consentBody:
-      'سنطرح بعض الأسئلة عن شعورك. الإجابات تبقى على هذا الجهاز. لا يُرسل شيء. لا حساب. يمكنك مسح كل شيء بضغطة واحدة.',
+    notAdvice: 'يتبع برنامج أخصائي العلاج الطبيعي.',
+    consentTitle: 'ابحث عن تمارينك',
+    consentBody: 'القليل من التفاصيل السريعة، ثم تضغط على مكان الألم. إجاباتك تبقى على هذا الجهاز. لا يُرسل شيء.',
     notMine: 'هذا ليس جهازي — احتفظ بالإجابات لهذه الزيارة فقط',
     agree: 'فهمت — متابعة',
     yes: 'نعم',
@@ -249,14 +247,13 @@ export default function Journey() {
             <p className="hero-kicker">{t.app}</p>
             <h2>{t.consentTitle}</h2>
             <p className="gf-hint">{t.consentBody}</p>
-            <p className="gf-hint">{t.notAdvice}</p>
             <label className="privacy-row">
               <input type="checkbox" checked={notMine} onChange={(e) => setNotMine(e.target.checked)} />
               <span>{t.notMine}</span>
             </label>
             <div className="gf-actions sticky-cta">
               <button className="gf-btn gf-btn-primary" onClick={handleConsent}>
-                {t.agree}
+                {t.continue}
               </button>
             </div>
           </section>
