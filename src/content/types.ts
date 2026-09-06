@@ -24,6 +24,10 @@ export type Reviewed = {
 /** Bilingual string. Arabic is first-class, not an afterthought. */
 export type I18nText = { en: string; ar: string };
 
+export type Irritability = 'quick' | 'hours' | 'day';
+
+export type PrecautionAction = 'hide' | 'warn' | 'stop_and_refer';
+
 /**
  * A coarse area the exercise library is organised by, mapping to one or more
  * of the 81 fine-grained viewer regions.
@@ -50,6 +54,7 @@ export type AnswerOption = {
 
 export type Question = Reviewed & {
   id: string;
+  /** `global` = asked for every area (symptom picture). */
   bodyArea: string;
   /** token used in answer paths, e.g. "movement" */
   key: string;
@@ -66,6 +71,42 @@ export type EscalationMessage = Reviewed & {
   title: I18nText;
   body: I18nText;
   cta: 'contact' | 'urgent' | 'none';
+  tone?: 'stop' | 'warn' | 'reassure';
+};
+
+/** Unskippable safety wall. Any positive answer ends the flow. */
+export type RedFlag = Reviewed & {
+  id: string;
+  prompt: I18nText;
+  /** option key that counts as positive (typically `yes`) */
+  positiveKey: string;
+  messageId: string;
+  order: number;
+};
+
+/**
+ * Closed-list precaution. May hide, warn, or stop. Never substitutes.
+ * Labels must not name diagnoses — clinician-authored category wording only.
+ */
+export type Precaution = Reviewed & {
+  conditionKey: string;
+  label: I18nText;
+  restrictsTags: string[];
+  restrictsIds: string[];
+  action: PrecautionAction;
+  messageId: string;
+};
+
+export type ThresholdKey =
+  | 'nrs_referral'
+  | 'amber_window_hours'
+  | 'rising_sessions_n'
+  | 'review_weeks'
+  | 'reminder_days';
+
+export type Threshold = Reviewed & {
+  key: ThresholdKey;
+  value: number;
 };
 
 export type Exercise = Reviewed & {
@@ -83,6 +124,8 @@ export type Exercise = Reviewed & {
   /** empty = suits everyone. Filters may only ever HIDE. */
   suitsSex?: Sex;
   suitsAgeBands?: AgeBand[];
+  precautionTags?: string[];
+  irritabilityMax?: Irritability;
   mediaStillId?: string;
   mediaClipId?: string;
 };
@@ -103,4 +146,7 @@ export type ContentBundle = {
   routes: Route[];
   exercises: Exercise[];
   escalations: EscalationMessage[];
+  redFlags: RedFlag[];
+  precautions: Precaution[];
+  thresholds: Threshold[];
 };

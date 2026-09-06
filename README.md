@@ -14,7 +14,7 @@ The viewer is the locator tier of a planned guided anatomy → exercise flow. Se
 - [`docs/IMPLEMENTATION-PLAN.md`](docs/IMPLEMENTATION-PLAN.md) — corrected baseline, schemas, phase plan
 - [`docs/CLINICIAN-HANDOFF.md`](docs/CLINICIAN-HANDOFF.md) — what the clinician / Medical Director must supply
 
-No clinical content exists in this repo, and the guided flow is blocked on decision D8.
+No approved clinical content exists in this repo. Placeholder rows are signed `PLACEHOLDER` and badged **DEMO CONTENT**. The guided journey is the default entry (consent → red-flag wall → precautions → optional profile → 3D map → symptom picture → routed exercises → session → traffic-light check → printable summary). BMI is not collected or used. D8 re-ruling is still required before real clinical content ships.
 
 ## Quick start
 

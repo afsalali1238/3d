@@ -1,0 +1,172 @@
+.ex-card {
+  overflow: hidden;
+  border-radius: 20px;
+  background: #141a22;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+}
+
+.ex-stage {
+  display: flex;
+  flex-direction: column;
+  background: #0a0d11;
+}
+
+.clip {
+  position: relative;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  background: #0a0d11;
+}
+
+.clip img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.clip-scrim {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-end: 0;
+  height: 88px;
+  background: linear-gradient(to top, rgba(6, 10, 14, 0.75), transparent);
+  pointer-events: none;
+}
+
+.clip-bar {
+  position: absolute;
+  inset-inline: 12px;
+  inset-block-end: 8px;
+  height: 3px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.18);
+  overflow: hidden;
+  z-index: 2;
+}
+.clip-bar i {
+  display: block;
+  height: 100%;
+  background: #00d4a8;
+}
+
+.ex-guide {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px 10px;
+  border-top: 1px solid rgba(148, 163, 184, 0.12);
+  background: #0e141b;
+}
+.ex-guide-label {
+  margin: 0;
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+}
+
+.mg {
+  display: grid;
+  place-items: center;
+  flex: 1;
+  padding: 0;
+  border: 0;
+}
+.mg-svg { width: min(220px, 70%); height: 120px; }
+
+.ex-play {
+  position: absolute;
+  inset-inline-start: 10px;
+  inset-block-end: 10px;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(6, 10, 14, 0.72);
+  color: #e8eef5;
+  font-size: 14px;
+  cursor: pointer;
+  z-index: 2;
+}
+.ex-cap {
+  position: absolute;
+  inset-inline-end: 10px;
+  inset-block-end: 12px;
+  z-index: 2;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(6, 10, 14, 0.72);
+  color: #00d4a8;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.mg {
+  display: grid;
+  place-items: center;
+  padding: 8px 4px;
+  border-inline-start: 1px solid rgba(148, 163, 184, 0.12);
+}
+.mg-svg { width: 78px; height: 112px; }
+
+/* Person faces LEFT. Signs match the joint. */
+.mg-tilt .mg-pelvis { animation: tilt 2.4s ease-in-out infinite; transform-origin: 62px 90px; }
+.mg-fold .mg-thigh { animation: fold 2.4s ease-in-out infinite; transform-origin: 58px 92px; }
+.mg-arch .mg-back { animation: arch 2.6s ease-in-out infinite; transform-origin: 60px 70px; }
+.mg-rise .mg-rise-g { animation: rise 2.6s ease-in-out infinite; transform-origin: 48px 112px; }
+.mg-tuck .mg-head-tuck { animation: tuck 2s ease-in-out infinite; }
+.mg-turn .mg-head-turn { animation: turn 2.6s ease-in-out infinite; transform-origin: 52px 42px; }
+.mg-squeeze .mg-scaps { animation: squeeze 2s ease-in-out infinite; transform-origin: 50px 48px; }
+.mg-lift .mg-hips { animation: lift 2.4s ease-in-out infinite; transform-origin: 70px 118px; }
+.mg-bend .mg-heel { animation: bend 2.2s ease-in-out infinite; transform-origin: 58px 70px; }
+.mg-circle .mg-foot { animation: orbit 2.2s linear infinite; transform-origin: 58px 90px; }
+
+/* posterior pelvic tilt: tailbone tucks, low back toward floor */
+@keyframes tilt { 0%,100% { transform: rotate(8deg); } 50% { transform: rotate(-12deg); } }
+/* hip flexion: thigh swings toward the head (left) */
+@keyframes fold { 0%,100% { transform: rotate(8deg); } 50% { transform: rotate(-55deg); } }
+/* cat (back up) then camel (belly down) */
+@keyframes arch { 0%,100% { transform: translateY(-10px); } 50% { transform: translateY(10px); } }
+/* sit (down) to stand (up) */
+@keyframes rise { 0%,100% { transform: translateY(16px) scaleY(0.92); } 50% { transform: translateY(0) scaleY(1); } }
+/* chin slides BACK (right), never nods down */
+@keyframes tuck { 0%,100% { transform: translateX(-8px); } 50% { transform: translateX(7px); } }
+/* look ahead, then over the left shoulder */
+@keyframes turn { 0%,100% { transform: rotate(0); } 50% { transform: rotate(-42deg); } }
+/* blades back + slightly down, not a shrug */
+@keyframes squeeze { 0%,100% { transform: scaleX(1.12) translateY(-2px); } 50% { transform: scaleX(0.78) translateY(4px); } }
+/* hips lift off the mat */
+@keyframes lift { 0%,100% { transform: translateY(12px); } 50% { transform: translateY(-14px); } }
+/* heel toward the buttock (knee flexes backward) */
+@keyframes bend { 0%,100% { transform: rotate(18deg); } 50% { transform: rotate(-70deg); } }
+@keyframes orbit { from { transform: rotate(0); } to { transform: rotate(360deg); } }
+
+.ex-body {
+  padding: 16px 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.ex-body h3 { margin: 0; font-size: 1.15rem; }
+.ex-purpose { margin: 0; color: #94a3b8; font-size: 0.95rem; line-height: 1.45; }
+.ex-steps { margin: 8px 0 0; padding-inline-start: 1.2em; color: #dbe4ee; font-size: 0.95rem; line-height: 1.6; }
+.ex-dose { margin: 4px 0 0; font-weight: 650; color: #00d4a8; }
+.ex-stop { margin: 0; color: #fdba74; font-size: 0.9rem; line-height: 1.45; }
+
+@media (prefers-reduced-motion: reduce) {
+  .mg-svg * { animation: none !important; }
+  .ex-media img { transition: none; }
+}
+
+@media (min-width: 720px) {
+  .ex-card.session {
+    display: grid;
+    grid-template-columns: minmax(280px, 48%) 1fr;
+  }
+  .ex-card.session .clip { aspect-ratio: 3 / 4; }
+}

@@ -53,6 +53,7 @@ export function selectPublished<T extends { status: string; reviewedBy: string }
 export type Profile = {
   sex?: Sex;
   ageBand?: AgeBand;
+  irritability?: import('./types').Irritability;
 };
 
 /**
@@ -64,6 +65,10 @@ export function filterBySuitability(exercises: Exercise[], profile: Profile): Ex
     if (e.suitsSex && profile.sex && e.suitsSex !== profile.sex) return false;
     if (e.suitsAgeBands?.length && profile.ageBand && !e.suitsAgeBands.includes(profile.ageBand)) {
       return false;
+    }
+    if (e.irritabilityMax && profile.irritability) {
+      const rank = { quick: 0, hours: 1, day: 2 } as const;
+      if (rank[profile.irritability] > rank[e.irritabilityMax]) return false;
     }
     return true;
   });

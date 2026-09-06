@@ -18,6 +18,9 @@ const NAMES: Array<keyof SourceFiles> = [
   'escalation_messages.csv',
   'exercises.csv',
   'routes.csv',
+  'red_flags.csv',
+  'precautions.csv',
+  'thresholds.csv',
 ];
 
 const OUT = 'src/content/bundle.gen.ts';

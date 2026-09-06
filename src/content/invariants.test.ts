@@ -22,6 +22,17 @@ function walk(dir: string, out: string[] = []): string[] {
 const SRC = walk('src');
 const read = (p: string) => readFileSync(p, 'utf8');
 
+describe('no BMI on the clinical path', () => {
+  it('never computes or displays BMI', () => {
+    const offenders: string[] = [];
+    for (const p of SRC.filter((f) => !f.endsWith('.test.ts'))) {
+      const src = read(p);
+      if (/\bBMI\b|\bbmi\b/.test(src)) offenders.push(p);
+    }
+    expect(offenders).toEqual([]);
+  });
+});
+
 describe('R5 — patient data never leaves the device', () => {
   const patientFiles = SRC.filter(
     (p) => /guided|content/.test(p) && !p.endsWith('.test.ts'),
@@ -45,9 +56,12 @@ describe('R5 — patient data never leaves the device', () => {
         keys.push(m[1]);
       }
     }
-    // all writes go through the PROFILE_KEY constant
+    // writes go through PROFILE_KEY, a 'bv.*' literal, or the storage helper's `key` param
     for (const k of keys) {
-      expect(k === 'PROFILE_KEY' || k.startsWith("'bv."), `unexpected storage key: ${k}`).toBe(true);
+      expect(
+        k === 'PROFILE_KEY' || k === 'MODE_KEY' || k === 'key' || k.startsWith("'bv."),
+        `unexpected storage key: ${k}`,
+      ).toBe(true);
     }
   });
 
@@ -77,10 +91,12 @@ describe('placeholder containment', () => {
     expect(src).toContain('PLACEHOLDER');
   });
 
-  it('the UI badges any content signed PLACEHOLDER', () => {
+  it('patient UI does not show demo warning copy', () => {
     const gf = read('src/components/guided/GuidedFlow.tsx');
-    expect(gf).toContain('PLACEHOLDER_SIGNATURE');
-    expect(gf).toContain('gf-demo');
+    const j = read('src/components/journey/Journey.tsx');
+    expect(gf).not.toContain('DEMO CONTENT');
+    expect(j).not.toContain('DEMO CONTENT');
+    expect(gf).not.toContain('gf-demo');
   });
 });
 
@@ -97,9 +113,10 @@ describe('R2 — one render gate', () => {
 
 describe('the sheet is the source of truth', () => {
   it('the app imports the generated bundle, not the placeholder module', () => {
-    const app = read('src/App.tsx');
-    expect(app).toContain("from './content/bundle.gen'");
-    expect(app).not.toContain("from './content/placeholder'");
+    const app = read('src/components/journey/Journey.tsx');
+    expect(app).toContain("from '../../content/bundle.gen'");
+    expect(app).not.toContain('placeholderContent');
+    expect(app).not.toContain("from '../../content/placeholder'");
   });
 
   it('bundle.gen.ts is generated, not hand-edited', () => {

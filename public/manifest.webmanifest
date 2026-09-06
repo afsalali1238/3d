@@ -1,0 +1,9 @@
+{
+  "name": "Home programme",
+  "short_name": "Programme",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0c0f13",
+  "theme_color": "#101418",
+  "lang": "en"
+}

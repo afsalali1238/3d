@@ -21,9 +21,14 @@ import type {
   EscalationMessage,
   Exercise,
   I18nText,
+  Precaution,
+  PrecautionAction,
   Question,
+  RedFlag,
   Route,
   Sex,
+  Threshold,
+  ThresholdKey,
 } from './types';
 
 export type Issue = {
@@ -352,6 +357,13 @@ function parseExercises(t: CsvTable, ctx: Ctx): Exercise[] {
     const steps: I18nText[] = stepsEn.map((en, i) => ({ en, ar: stepsAr[i] ?? en }));
     for (const s of steps) ctx.clean(row, 'steps_en', s.en);
 
+    const irrRaw = ctx.opt(row, 'irritability_max').toLowerCase();
+    const IRR = ['quick', 'hours', 'day'] as const;
+    if (irrRaw && !IRR.includes(irrRaw as (typeof IRR)[number])) {
+      ctx.err(row.line, `"irritability_max" must be quick, hours, day, or empty (got "${irrRaw}")`, 'irritability_max');
+    }
+    const precautionTags = ctx.list(row, 'precaution_tags');
+
     const suitsSexRaw = ctx.opt(row, 'suits_sex').toLowerCase();
     if (suitsSexRaw && !SEXES.includes(suitsSexRaw as Sex)) {
       ctx.err(row.line, `"suits_sex" must be male, female, or empty (got "${suitsSexRaw}")`, 'suits_sex',
@@ -375,6 +387,8 @@ function parseExercises(t: CsvTable, ctx: Ctx): Exercise[] {
       steps,
       ...(SEXES.includes(suitsSexRaw as Sex) ? { suitsSex: suitsSexRaw as Sex } : {}),
       ...(bands.length ? { suitsAgeBands: bands.filter((b) => AGE_BANDS.includes(b as AgeBand)) as AgeBand[] } : {}),
+      ...(precautionTags.length ? { precautionTags } : {}),
+      ...(IRR.includes(irrRaw as (typeof IRR)[number]) ? { irritabilityMax: irrRaw as (typeof IRR)[number] } : {}),
       ...ctx.reviewed(row),
       __line: row.line,
     } as Exercise & { __line: number };
@@ -452,6 +466,78 @@ function parseRoutes(t: CsvTable, ctx: Ctx): Route[] {
   return out.map(({ __line, ...r }) => r as Route);
 }
 
+const THRESHOLD_KEYS: ThresholdKey[] = [
+  'nrs_referral',
+  'amber_window_hours',
+  'rising_sessions_n',
+  'review_weeks',
+  'reminder_days',
+];
+
+function parseRedFlags(t: CsvTable, ctx: Ctx): RedFlag[] {
+  const out = t.rows.map((row) => {
+    const id = ctx.slug(row, 'flag_id');
+    const prompt = ctx.i18n(row, 'prompt');
+    ctx.clean(row, 'prompt_en', prompt.en);
+    ctx.clean(row, 'prompt_ar', prompt.ar);
+    const positiveKey = ctx.slug(row, 'positive_key');
+    const messageId = ctx.req(row, 'message_id');
+    return {
+      id,
+      prompt,
+      positiveKey,
+      messageId,
+      order: ctx.int(row, 'order', 1),
+      ...ctx.reviewed(row),
+      __line: row.line,
+    } as RedFlag & { __line: number };
+  });
+  ctx.dupes(out.map((r) => ({ id: r.id, line: r.__line })), 'flag_id');
+  return out.map(({ __line, ...r }) => r);
+}
+
+function parsePrecautions(t: CsvTable, ctx: Ctx): Precaution[] {
+  const ACTIONS: PrecautionAction[] = ['hide', 'warn', 'stop_and_refer'];
+  const out = t.rows.map((row) => {
+    const conditionKey = ctx.slug(row, 'condition_key');
+    const label = ctx.i18n(row, 'label');
+    ctx.clean(row, 'label_en', label.en);
+    ctx.clean(row, 'label_ar', label.ar);
+    const actionRaw = (ctx.opt(row, 'action') || 'warn').toLowerCase();
+    if (!ACTIONS.includes(actionRaw as PrecautionAction)) {
+      ctx.err(row.line, `"action" must be hide, warn, or stop_and_refer (got "${actionRaw}")`, 'action');
+    }
+    const messageId = ctx.req(row, 'message_id');
+    return {
+      conditionKey,
+      label,
+      restrictsTags: ctx.list(row, 'restricts_tags'),
+      restrictsIds: ctx.list(row, 'restricts_ids'),
+      action: (ACTIONS.includes(actionRaw as PrecautionAction) ? actionRaw : 'warn') as PrecautionAction,
+      messageId,
+      ...ctx.reviewed(row),
+      __line: row.line,
+    } as Precaution & { __line: number };
+  });
+  ctx.dupes(out.map((r) => ({ id: r.conditionKey, line: r.__line })), 'condition_key');
+  return out.map(({ __line, ...r }) => r);
+}
+
+function parseThresholds(t: CsvTable, ctx: Ctx): Threshold[] {
+  const out = t.rows.map((row) => {
+    const key = ctx.slug(row, 'key') as ThresholdKey;
+    if (!THRESHOLD_KEYS.includes(key)) {
+      ctx.err(row.line, `unknown threshold key "${key}"`, 'key', `Use one of: ${THRESHOLD_KEYS.join(', ')}`);
+    }
+    const value = ctx.int(row, 'value', NaN);
+    if (!Number.isFinite(value)) {
+      ctx.err(row.line, `"value" must be a number`, 'value');
+    }
+    return { key, value, ...ctx.reviewed(row), __line: row.line } as Threshold & { __line: number };
+  });
+  return out.map(({ __line, ...r }) => r);
+}
+
 /* ---------------------------------------------------- cross-table checks */
 
 function crossCheck(b: ContentBundle, issues: Issue[]) {
@@ -464,7 +550,7 @@ function crossCheck(b: ContentBundle, issues: Issue[]) {
     issues.push({ severity: 'warning', file, line: 0, message, fix });
 
   for (const q of b.questions) {
-    if (!areas.has(q.bodyArea)) {
+    if (q.bodyArea !== 'global' && !areas.has(q.bodyArea)) {
       push('questions.csv', `question "${q.id}" refers to unknown body_area "${q.bodyArea}"`,
         'Add it to body_areas.csv or fix the spelling.');
     }
@@ -559,6 +645,9 @@ export type SourceFiles = {
   'escalation_messages.csv': string;
   'exercises.csv': string;
   'routes.csv': string;
+  'red_flags.csv': string;
+  'precautions.csv': string;
+  'thresholds.csv': string;
 };
 
 export function validateContent(files: SourceFiles): ValidationResult {
@@ -591,10 +680,22 @@ export function validateContent(files: SourceFiles): ValidationResult {
   );
   const exercises = parseExercises(table('exercises.csv'), c('exercises.csv'));
   const routes = parseRoutes(table('routes.csv'), c('routes.csv'));
+  const redFlags = parseRedFlags(table('red_flags.csv'), c('red_flags.csv'));
+  const precautions = parsePrecautions(table('precautions.csv'), c('precautions.csv'));
+  const thresholds = parseThresholds(table('thresholds.csv'), c('thresholds.csv'));
 
   for (const ctx of Object.values(ctxs)) issues.push(...ctx.issues);
 
-  const bundle: ContentBundle = { bodyAreas, questions, routes, exercises, escalations };
+  const bundle: ContentBundle = {
+    bodyAreas,
+    questions,
+    routes,
+    exercises,
+    escalations,
+    redFlags,
+    precautions,
+    thresholds,
+  };
   crossCheck(bundle, issues);
 
   return { bundle, issues, ok: !issues.some((i) => i.severity === 'error') };

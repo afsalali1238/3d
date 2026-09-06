@@ -110,4 +110,37 @@ write('routes.csv',
     ...rev(r),
   })));
 
+write('red_flags.csv',
+  ['flag_id', 'prompt_en', 'prompt_ar', 'positive_key', 'message_id', 'order', 'status', 'reviewed_by', 'reviewed_on'],
+  C.redFlags.map((f) => ({
+    flag_id: f.id,
+    prompt_en: f.prompt.en,
+    prompt_ar: f.prompt.ar,
+    positive_key: f.positiveKey,
+    message_id: f.messageId,
+    order: String(f.order),
+    ...rev(f),
+  })));
+
+write('precautions.csv',
+  ['condition_key', 'label_en', 'label_ar', 'restricts_tags', 'restricts_ids', 'action', 'message_id', 'status', 'reviewed_by', 'reviewed_on'],
+  C.precautions.map((p) => ({
+    condition_key: p.conditionKey,
+    label_en: p.label.en,
+    label_ar: p.label.ar,
+    restricts_tags: p.restrictsTags.join('|'),
+    restricts_ids: p.restrictsIds.join('|'),
+    action: p.action,
+    message_id: p.messageId,
+    ...rev(p),
+  })));
+
+write('thresholds.csv',
+  ['key', 'value', 'status', 'reviewed_by', 'reviewed_on'],
+  C.thresholds.map((t) => ({
+    key: t.key,
+    value: String(t.value),
+    ...rev(t),
+  })));
+
 console.log('\nDone. Sheets are in ./content — open them in Excel or Google Sheets.');

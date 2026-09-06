@@ -6,6 +6,7 @@
  * Skipping stores nothing at all.
  */
 import type { AgeBand, Sex } from '../../content/types';
+import { readJson, writeJson, removeKey } from '../../privacy/storage';
 
 export const PROFILE_KEY = 'bv.profile.v1';
 

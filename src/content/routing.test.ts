@@ -99,7 +99,7 @@ describe('R1 — exact lookup, no inference', () => {
   });
 
   it('returns empty (not a guess) for an area with no published content', () => {
-    expect(resolveOutcome(C, 'neck', {}).kind).toBe('empty');
+    expect(resolveOutcome(C, 'no_such_area', {}).kind).toBe('empty');
   });
 });
 

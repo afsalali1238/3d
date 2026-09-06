@@ -31,6 +31,53 @@ export const CONTENT: ContentBundle = {
         "left_trapezius",
         "right_trapezius"
       ]
+    },
+    {
+      "id": "shoulder",
+      "label": {
+        "en": "Shoulder",
+        "ar": "الكتف"
+      },
+      "regionIds": [
+        "left_deltoid_anterior",
+        "right_deltoid_anterior",
+        "left_deltoid_lateral",
+        "right_deltoid_lateral",
+        "left_deltoid_posterior",
+        "right_deltoid_posterior",
+        "left_rotator_cuff",
+        "right_rotator_cuff"
+      ]
+    },
+    {
+      "id": "hip",
+      "label": {
+        "en": "Hip",
+        "ar": "الورك"
+      },
+      "regionIds": [
+        "left_glute",
+        "right_glute",
+        "left_hip_groin",
+        "right_hip_groin"
+      ]
+    },
+    {
+      "id": "knee",
+      "label": {
+        "en": "Knee",
+        "ar": "الركبة"
+      },
+      "regionIds": [
+        "left_knee_anterior",
+        "right_knee_anterior",
+        "left_knee_medial",
+        "right_knee_medial",
+        "left_knee_lateral",
+        "right_knee_lateral",
+        "left_knee_posterior",
+        "right_knee_posterior"
+      ]
     }
   ],
   "questions": [
@@ -80,6 +127,198 @@ export const CONTENT: ContentBundle = {
           },
           "redFlag": true,
           "escalationId": "esc_see_someone"
+        }
+      ],
+      "order": 1,
+      "skippable": true,
+      "status": "published",
+      "reviewedBy": "PLACEHOLDER",
+      "reviewedOn": "2026-09-06"
+    },
+    {
+      "id": "g_onset",
+      "bodyArea": "global",
+      "key": "onset",
+      "prompt": {
+        "en": "Did this start after a particular activity, or has it been around for a while?",
+        "ar": "هل بدأ هذا بعد نشاط معيّن، أم أنه موجود منذ فترة؟"
+      },
+      "options": [
+        {
+          "id": "g_onset_a",
+          "key": "new_after_activity",
+          "label": {
+            "en": "New, after an activity",
+            "ar": "جديد، بعد نشاط"
+          }
+        },
+        {
+          "id": "g_onset_b",
+          "key": "long_standing",
+          "label": {
+            "en": "It has been around for a while",
+            "ar": "موجود منذ فترة"
+          }
+        }
+      ],
+      "order": 1,
+      "skippable": false,
+      "status": "published",
+      "reviewedBy": "PLACEHOLDER",
+      "reviewedOn": "2026-09-06"
+    },
+    {
+      "id": "g_duration",
+      "bodyArea": "global",
+      "key": "duration",
+      "prompt": {
+        "en": "Roughly how long has it been present?",
+        "ar": "منذ متى تقريباً وهو موجود؟"
+      },
+      "options": [
+        {
+          "id": "g_dur_a",
+          "key": "days",
+          "label": {
+            "en": "A few days",
+            "ar": "بضعة أيام"
+          }
+        },
+        {
+          "id": "g_dur_b",
+          "key": "weeks",
+          "label": {
+            "en": "A few weeks",
+            "ar": "بضعة أسابيع"
+          }
+        },
+        {
+          "id": "g_dur_c",
+          "key": "months",
+          "label": {
+            "en": "Months or longer",
+            "ar": "أشهر أو أكثر"
+          }
+        }
+      ],
+      "order": 2,
+      "skippable": true,
+      "status": "published",
+      "reviewedBy": "PLACEHOLDER",
+      "reviewedOn": "2026-09-06"
+    },
+    {
+      "id": "g_irritability",
+      "bodyArea": "global",
+      "key": "irritability",
+      "prompt": {
+        "en": "If it gets stirred up, how long before it settles?",
+        "ar": "إذا اشتد، كم يمضي قبل أن يهدأ؟"
+      },
+      "options": [
+        {
+          "id": "g_irr_a",
+          "key": "quick",
+          "label": {
+            "en": "It settles quickly",
+            "ar": "يهدأ بسرعة"
+          }
+        },
+        {
+          "id": "g_irr_b",
+          "key": "hours",
+          "label": {
+            "en": "An hour or two",
+            "ar": "ساعة أو ساعتان"
+          }
+        },
+        {
+          "id": "g_irr_c",
+          "key": "day",
+          "label": {
+            "en": "The rest of the day",
+            "ar": "بقية اليوم"
+          }
+        }
+      ],
+      "order": 3,
+      "skippable": false,
+      "status": "published",
+      "reviewedBy": "PLACEHOLDER",
+      "reviewedOn": "2026-09-06"
+    },
+    {
+      "id": "g_pattern",
+      "bodyArea": "global",
+      "key": "pattern",
+      "prompt": {
+        "en": "When in the day does it tend to bother you most?",
+        "ar": "في أي وقت من اليوم يزعجك أكثر؟"
+      },
+      "options": [
+        {
+          "id": "g_pat_a",
+          "key": "morning",
+          "label": {
+            "en": "Worse in the morning",
+            "ar": "أسوأ في الصباح"
+          }
+        },
+        {
+          "id": "g_pat_b",
+          "key": "sitting",
+          "label": {
+            "en": "Worse with sitting",
+            "ar": "أسوأ مع الجلوس"
+          }
+        },
+        {
+          "id": "g_pat_c",
+          "key": "activity",
+          "label": {
+            "en": "Worse with activity",
+            "ar": "أسوأ مع النشاط"
+          }
+        }
+      ],
+      "order": 4,
+      "skippable": true,
+      "status": "published",
+      "reviewedBy": "PLACEHOLDER",
+      "reviewedOn": "2026-09-06"
+    },
+    {
+      "id": "nk_q1",
+      "bodyArea": "neck",
+      "key": "movement",
+      "prompt": {
+        "en": "Which way feels most limited?",
+        "ar": "أي اتجاه تشعر أنه الأكثر تقييداً؟"
+      },
+      "options": [
+        {
+          "id": "nk_q1_a",
+          "key": "turning",
+          "label": {
+            "en": "Turning",
+            "ar": "الالتفاف"
+          }
+        },
+        {
+          "id": "nk_q1_b",
+          "key": "looking_up",
+          "label": {
+            "en": "Looking up",
+            "ar": "النظر إلى الأعلى"
+          }
+        },
+        {
+          "id": "nk_q1_c",
+          "key": "looking_down",
+          "label": {
+            "en": "Looking down",
+            "ar": "النظر إلى الأسفل"
+          }
         }
       ],
       "order": 1,
@@ -347,6 +586,228 @@ export const CONTENT: ContentBundle = {
       "status": "published",
       "reviewedBy": "PLACEHOLDER",
       "reviewedOn": "2026-09-06"
+    },
+    {
+      "id": "nk_ex_chin_tuck",
+      "bodyArea": "neck",
+      "name": {
+        "en": "Chin Tuck",
+        "ar": "سحب الذقن"
+      },
+      "purpose": {
+        "en": "A small, slow way to lengthen the neck without looking down.",
+        "ar": "طريقة صغيرة وبطيئة لإطالة الرقبة دون النظر إلى الأسفل."
+      },
+      "dosage": {
+        "en": "8 slow repetitions. Twice a day.",
+        "ar": "٨ تكرارات بطيئة. مرتين يومياً."
+      },
+      "safety": {
+        "en": "Stop if this increases pain or sends symptoms into an arm.",
+        "ar": "توقف إذا زاد الألم أو امتدت الأعراض إلى الذراع."
+      },
+      "steps": [
+        {
+          "en": "Sit tall with your shoulders relaxed.",
+          "ar": "اجلس باستقامة مع استرخاء الكتفين."
+        },
+        {
+          "en": "Gently draw your chin straight back, as if making a double chin.",
+          "ar": "اسحب ذقنك برفق إلى الخلف مباشرة."
+        },
+        {
+          "en": "Hold, then return to a comfortable rest.",
+          "ar": "اثبت، ثم عد إلى وضع مريح."
+        }
+      ],
+      "status": "published",
+      "reviewedBy": "PLACEHOLDER",
+      "reviewedOn": "2026-09-06"
+    },
+    {
+      "id": "nk_ex_neck_turn",
+      "bodyArea": "neck",
+      "name": {
+        "en": "Easy Neck Turn",
+        "ar": "التفاف الرقبة بلطف"
+      },
+      "purpose": {
+        "en": "Moves the neck through a comfortable turning range.",
+        "ar": "يحرك الرقبة ضمن مدى التفاف مريح."
+      },
+      "dosage": {
+        "en": "6 turns each side. Once or twice a day.",
+        "ar": "٦ التفافات لكل جانب. مرة أو مرتين يومياً."
+      },
+      "safety": {
+        "en": "Stay in a range that feels easy. Do not force the end.",
+        "ar": "ابقِ ضمن مدى سهل. لا تجبر نهاية الحركة."
+      },
+      "steps": [
+        {
+          "en": "Sit or stand tall.",
+          "ar": "اجلس أو قف باستقامة."
+        },
+        {
+          "en": "Slowly turn to look over one shoulder.",
+          "ar": "استدر ببطء للنظر فوق أحد الكتفين."
+        },
+        {
+          "en": "Return through centre, then the other side.",
+          "ar": "عد عبر الوسط ثم الجانب الآخر."
+        }
+      ],
+      "status": "published",
+      "reviewedBy": "PLACEHOLDER",
+      "reviewedOn": "2026-09-06"
+    },
+    {
+      "id": "sh_ex_blade_squeeze",
+      "bodyArea": "shoulder",
+      "name": {
+        "en": "Shoulder Blade Squeeze",
+        "ar": "ضم لوحي الكتف"
+      },
+      "purpose": {
+        "en": "Gently brings the shoulder blades together without shrugging.",
+        "ar": "يقرّب لوحي الكتف بلطف دون رفع الكتفين."
+      },
+      "dosage": {
+        "en": "Hold 5 seconds, 10 times. Twice a day.",
+        "ar": "ثبات ٥ ثوانٍ، ١٠ مرات. مرتين يومياً."
+      },
+      "safety": {
+        "en": "Keep the movement small. Do not pinch into pain.",
+        "ar": "أبقِ الحركة صغيرة. لا تضغط إلى حد الألم."
+      },
+      "steps": [
+        {
+          "en": "Sit or stand with arms relaxed.",
+          "ar": "اجلس أو قف مع استرخاء الذراعين."
+        },
+        {
+          "en": "Draw the shoulder blades slightly together and down.",
+          "ar": "قرّب لوحي الكتف قليلاً إلى الداخل والأسفل."
+        },
+        {
+          "en": "Hold, then release.",
+          "ar": "اثبت، ثم أرخِ."
+        }
+      ],
+      "status": "published",
+      "reviewedBy": "PLACEHOLDER",
+      "reviewedOn": "2026-09-06"
+    },
+    {
+      "id": "hp_ex_bridge",
+      "bodyArea": "hip",
+      "name": {
+        "en": "Gentle Bridge",
+        "ar": "الجسر اللطيف"
+      },
+      "purpose": {
+        "en": "Lifts the hips a short way to move the back of the hips.",
+        "ar": "يرفع الوركين مسافة قصيرة لتحريك خلف الورك."
+      },
+      "dosage": {
+        "en": "8 repetitions. Once a day.",
+        "ar": "٨ تكرارات. مرة يومياً."
+      },
+      "safety": {
+        "en": "Stop if this increases pain in the back or down a leg.",
+        "ar": "توقف إذا زاد ألم الظهر أو الساق."
+      },
+      "steps": [
+        {
+          "en": "Lie on your back with knees bent and feet flat.",
+          "ar": "استلقِ على ظهرك مع ثني الركبتين."
+        },
+        {
+          "en": "Press through the feet and lift the hips a little.",
+          "ar": "اضغط بالقدمين وارفع الوركين قليلاً."
+        },
+        {
+          "en": "Lower slowly.",
+          "ar": "أنزل ببطء."
+        }
+      ],
+      "status": "published",
+      "reviewedBy": "PLACEHOLDER",
+      "reviewedOn": "2026-09-06"
+    },
+    {
+      "id": "kn_ex_bend",
+      "bodyArea": "knee",
+      "name": {
+        "en": "Supported Knee Bend",
+        "ar": "ثني الركبة مع دعم"
+      },
+      "purpose": {
+        "en": "Bends the knee through a small, supported range.",
+        "ar": "يثني الركبة ضمن مدى صغير مع دعم."
+      },
+      "dosage": {
+        "en": "10 each side. Once a day.",
+        "ar": "١٠ لكل جانب. مرة يومياً."
+      },
+      "safety": {
+        "en": "Hold the chair. Stay in a comfortable range.",
+        "ar": "أمسك الكرسي. ابقَ ضمن مدى مريح."
+      },
+      "steps": [
+        {
+          "en": "Stand beside a stable chair and hold on.",
+          "ar": "قف بجانب كرسي ثابت وأمسك به."
+        },
+        {
+          "en": "Bend one knee a little, keeping the movement slow.",
+          "ar": "اثنِ ركبة واحدة قليلاً ببطء."
+        },
+        {
+          "en": "Straighten, then switch sides.",
+          "ar": "مدّها ثم بدّل الجانب."
+        }
+      ],
+      "status": "published",
+      "reviewedBy": "PLACEHOLDER",
+      "reviewedOn": "2026-09-06"
+    },
+    {
+      "id": "kn_ex_ankle",
+      "bodyArea": "knee",
+      "name": {
+        "en": "Ankle Circles",
+        "ar": "دوائر الكاحل"
+      },
+      "purpose": {
+        "en": "Keeps the lower leg moving while you rest the knee.",
+        "ar": "يبقي أسفل الساق متحركاً أثناء راحة الركبة."
+      },
+      "dosage": {
+        "en": "10 circles each way, each side.",
+        "ar": "١٠ دوائر لكل اتجاه ولكل جانب."
+      },
+      "safety": {
+        "en": "Move slowly. Stop if the movement increases pain.",
+        "ar": "تحرك ببطء. توقف إذا زاد الألم."
+      },
+      "steps": [
+        {
+          "en": "Sit with the back supported.",
+          "ar": "اجلس مع دعم الظهر."
+        },
+        {
+          "en": "Lift one foot a little and slowly circle the ankle.",
+          "ar": "ارفع قدماً قليلاً وحرّك الكاحل بدوائر بطيئة."
+        },
+        {
+          "en": "Change direction, then switch sides.",
+          "ar": "غيّر الاتجاه ثم بدّل الجانب."
+        }
+      ],
+      "status": "published",
+      "reviewedBy": "PLACEHOLDER",
+      "reviewedOn": "2026-09-06"
     }
   ],
   "escalations": [
@@ -361,6 +822,197 @@ export const CONTENT: ContentBundle = {
         "ar": "ما وصفته يحتاج إلى تقييم مباشر من أخصائي علاج طبيعي قبل البدء بأي تمارين. هذا ليس داعياً للقلق، لكنه يعني ببساطة أن التمارين ليست الخطوة التالية المناسبة قبل الفحص. يرجى التواصل معنا لتحديد موعد."
       },
       "cta": "contact",
+      "status": "published",
+      "reviewedBy": "PLACEHOLDER",
+      "reviewedOn": "2026-09-06"
+    }
+  ],
+  "redFlags": [
+    {
+      "id": "rf_trauma",
+      "prompt": {
+        "en": "Did this start after a fall, a collision, or another significant impact?",
+        "ar": "هل بدأ هذا بعد سقوط أو اصطدام أو تأثير قوي؟"
+      },
+      "positiveKey": "yes",
+      "messageId": "esc_see_someone",
+      "order": 1,
+      "status": "published",
+      "reviewedBy": "PLACEHOLDER",
+      "reviewedOn": "2026-09-06"
+    },
+    {
+      "id": "rf_neuro",
+      "prompt": {
+        "en": "Are you noticing new numbness, tingling that is spreading, or weakness in an arm or a leg?",
+        "ar": "هل تلاحظ خدراً جديداً أو تنميلاً منتشراً أو ضعفاً في ذراع أو ساق؟"
+      },
+      "positiveKey": "yes",
+      "messageId": "esc_see_someone",
+      "order": 2,
+      "status": "published",
+      "reviewedBy": "PLACEHOLDER",
+      "reviewedOn": "2026-09-06"
+    },
+    {
+      "id": "rf_night",
+      "prompt": {
+        "en": "Does pain wake you at night and stay with you even after you change position?",
+        "ar": "هل يوقظك الألم ليلاً ويبقى حتى بعد تغيير وضعيتك؟"
+      },
+      "positiveKey": "yes",
+      "messageId": "esc_see_someone",
+      "order": 3,
+      "status": "published",
+      "reviewedBy": "PLACEHOLDER",
+      "reviewedOn": "2026-09-06"
+    },
+    {
+      "id": "rf_bladder",
+      "prompt": {
+        "en": "Have you noticed a change in bladder or bowel control that is new for you?",
+        "ar": "هل لاحظت تغيراً جديداً في التحكم بالمثانة أو الأمعاء؟"
+      },
+      "positiveKey": "yes",
+      "messageId": "esc_see_someone",
+      "order": 4,
+      "status": "published",
+      "reviewedBy": "PLACEHOLDER",
+      "reviewedOn": "2026-09-06"
+    },
+    {
+      "id": "rf_weight",
+      "prompt": {
+        "en": "Have you lost weight without trying, alongside this pain?",
+        "ar": "هل فقدت وزناً دون محاولة، مع هذا الألم؟"
+      },
+      "positiveKey": "yes",
+      "messageId": "esc_see_someone",
+      "order": 5,
+      "status": "published",
+      "reviewedBy": "PLACEHOLDER",
+      "reviewedOn": "2026-09-06"
+    },
+    {
+      "id": "rf_chest",
+      "prompt": {
+        "en": "Do you get chest tightness, unusual breathlessness, or arm pain with effort?",
+        "ar": "هل تشعر بضيق في الصدر أو ضيق نفس غير معتاد أو ألم في الذراع مع الجهد؟"
+      },
+      "positiveKey": "yes",
+      "messageId": "esc_see_someone",
+      "order": 6,
+      "status": "published",
+      "reviewedBy": "PLACEHOLDER",
+      "reviewedOn": "2026-09-06"
+    }
+  ],
+  "precautions": [
+    {
+      "conditionKey": "none",
+      "label": {
+        "en": "None of these",
+        "ar": "لا شيء من هذا"
+      },
+      "restrictsTags": [],
+      "restrictsIds": [],
+      "action": "warn",
+      "messageId": "esc_see_someone",
+      "status": "published",
+      "reviewedBy": "PLACEHOLDER",
+      "reviewedOn": "2026-09-06"
+    },
+    {
+      "conditionKey": "prefer_not_to_say",
+      "label": {
+        "en": "Prefer not to say",
+        "ar": "أفضل عدم الإفصاح"
+      },
+      "restrictsTags": [],
+      "restrictsIds": [],
+      "action": "warn",
+      "messageId": "esc_see_someone",
+      "status": "published",
+      "reviewedBy": "PLACEHOLDER",
+      "reviewedOn": "2026-09-06"
+    },
+    {
+      "conditionKey": "recent_surgery",
+      "label": {
+        "en": "Recent surgery in the last 3 months",
+        "ar": "عملية جراحية خلال الأشهر الثلاثة الماضية"
+      },
+      "restrictsTags": [],
+      "restrictsIds": [],
+      "action": "stop_and_refer",
+      "messageId": "esc_see_someone",
+      "status": "published",
+      "reviewedBy": "PLACEHOLDER",
+      "reviewedOn": "2026-09-06"
+    },
+    {
+      "conditionKey": "balance_concern",
+      "label": {
+        "en": "A balance problem that makes standing unaided unsafe",
+        "ar": "مشكلة في التوازن تجعل الوقوف دون مساعدة غير آمن"
+      },
+      "restrictsTags": [],
+      "restrictsIds": [
+        "lb_ex_sit_stand"
+      ],
+      "action": "hide",
+      "messageId": "esc_see_someone",
+      "status": "published",
+      "reviewedBy": "PLACEHOLDER",
+      "reviewedOn": "2026-09-06"
+    },
+    {
+      "conditionKey": "pregnancy_or_postpartum",
+      "label": {
+        "en": "Currently pregnant or within 6 weeks after birth",
+        "ar": "حامل حالياً أو خلال ستة أسابيع بعد الولادة"
+      },
+      "restrictsTags": [],
+      "restrictsIds": [],
+      "action": "stop_and_refer",
+      "messageId": "esc_see_someone",
+      "status": "published",
+      "reviewedBy": "PLACEHOLDER",
+      "reviewedOn": "2026-09-06"
+    }
+  ],
+  "thresholds": [
+    {
+      "key": "nrs_referral",
+      "value": 8,
+      "status": "published",
+      "reviewedBy": "PLACEHOLDER",
+      "reviewedOn": "2026-09-06"
+    },
+    {
+      "key": "amber_window_hours",
+      "value": 24,
+      "status": "published",
+      "reviewedBy": "PLACEHOLDER",
+      "reviewedOn": "2026-09-06"
+    },
+    {
+      "key": "rising_sessions_n",
+      "value": 3,
+      "status": "published",
+      "reviewedBy": "PLACEHOLDER",
+      "reviewedOn": "2026-09-06"
+    },
+    {
+      "key": "review_weeks",
+      "value": 6,
+      "status": "published",
+      "reviewedBy": "PLACEHOLDER",
+      "reviewedOn": "2026-09-06"
+    },
+    {
+      "key": "reminder_days",
+      "value": 21,
       "status": "published",
       "reviewedBy": "PLACEHOLDER",
       "reviewedOn": "2026-09-06"
