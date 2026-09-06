@@ -27,8 +27,11 @@ jobs:
         run: git diff --exit-code src/content/bundle.gen.ts
 
       # Type safety
-      - name: Typecheck
+      - name: Typecheck (app)
         run: npx tsc -b --noEmit
+
+      - name: Typecheck (tests + scripts)
+        run: npx tsc -p tsconfig.test.json --noEmit
 
       # Build first: the perf budget test measures the real dist output
       - name: Build
