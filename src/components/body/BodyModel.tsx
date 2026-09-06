@@ -15,12 +15,10 @@ import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.j
 import { createSkinMaterial, type SkinMaterialHandle } from './skinMaterial';
 import type { Gender } from './types';
 
-export const MODEL_URL = '/models/body.glb?v=3';
-
 export const MODEL_URLS: Record<Gender, string> = {
-  neutral: MODEL_URL,
-  male: MODEL_URL,
-  female: MODEL_URL,
+  male: '/models/body-male.glb?v=4',
+  female: '/models/body-female.glb?v=4',
+  neutral: '/models/body-male.glb?v=4',
 };
 
 const dracoLoader = new DRACOLoader().setDecoderPath('/decoders/');
@@ -36,11 +34,11 @@ export type BodyModelProps = {
 };
 
 export const BodyModel = forwardRef<THREE.Mesh, BodyModelProps>(function BodyModel(
-  { gender = 'neutral', breathing, onReady, onPointerMove, onPointerOut, onClick },
+  { gender = 'male', breathing, onReady, onPointerMove, onPointerOut, onClick },
   ref,
 ) {
   const gl = useThree((s) => s.gl);
-  const modelUrl = MODEL_URLS[gender] ?? MODEL_URL;
+  const modelUrl = MODEL_URLS[gender] ?? MODEL_URLS.male;
   const gltf = useLoader(GLTFLoader, modelUrl, (loader) => {
     loader.setDRACOLoader(dracoLoader);
     loader.setKTX2Loader(ktx2Loader.detectSupport(gl));

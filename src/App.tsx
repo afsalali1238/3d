@@ -66,6 +66,7 @@ const T = {
 } as const;
 
 export default function App() {
+  const [gender, setGender] = useState<Gender>('male');
   const [view, setView] = useState<BodyView>('anterior');
   const [mode, setMode] = useState<ViewerMode>('select');
   const [locale, setLocale] = useState<Locale>('en');
@@ -164,6 +165,7 @@ export default function App() {
       <main className="app-main">
         <div className="viewer-wrap">
           <BodyViewer
+            gender={gender}
             view={view}
             mode={mode}
             locale={locale}
@@ -185,6 +187,14 @@ export default function App() {
               </button>
               <button className={view === 'posterior' ? 'on' : ''} onClick={() => setView('posterior')}>
                 {t.back}
+              </button>
+            </div>
+            <div className="seg">
+              <button className={gender === 'male' ? 'on' : ''} onClick={() => setGender('male')}>
+                {t.male}
+              </button>
+              <button className={gender === 'female' ? 'on' : ''} onClick={() => setGender('female')}>
+                {t.female}
               </button>
             </div>
             <button
