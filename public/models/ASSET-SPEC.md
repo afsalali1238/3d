@@ -19,7 +19,37 @@ skin shell was extracted (11.4k verts / 22.4k tris), segmented into 81
 anatomical regions, and baked with a per-vertex thickness channel by
 `scripts/build_body_asset.py`. The female variant is a smooth regional
 reshape of the same scan (a stand-in until a licensed female scan is
-sourced). Each GLB is ~0.63 MB.
+sourced). Each GLB is ~80 KB.
+
+### Universal anatomy pass (applied to both bodies)
+
+Both shipped GLBs are **anatomically universal**: the genital geometry of
+the source scan has been removed, while the male/female silhouettes
+(shoulders, waist, hips, chest) are preserved so the toggle still works.
+
+Applied post-build by `node scripts/neutralise-universal.mjs` (see
+`scripts/lib/neutralise-lib.mjs`). The pass is adaptive — no per-model
+hardcoded coordinates. It builds a *pubic envelope* `z_env(y)` from the
+surrounding groin surface (P90 of the two lateral bands 45–100 mm off the
+midline), finds the most protruding medial vertex in `y ∈ [0.60, 0.85]`,
+dilates the protruding cluster into a 3-ring patch with a pinned boundary,
+collapses it back onto the envelope with a smoothstep weight (tips fully,
+bases barely — no stretched triangles), relaxes the patch with constrained
+Laplacian smoothing, snaps residual spikes, and clamps everything to
+`z_env(y) + 4 mm`. Normals are recomputed (area-weighted) only for
+affected vertices; everything else is byte-identical, and `_REGIONID` /
+`_THICKNESS` ride along untouched (all 81 region ids verified after the
+Draco round trip; picker rounding tolerates the < 0.01 quantization drift).
+
+Verified headlessly: relocated verts confined to the pubic zone, frontal
+picking in the flattened area still resolves live regions (hip/groin,
+lower abdomen), and stored-normal smoothness in the patch (p95 ≈ 22–24°
+across edges) is better than the body-wide average.
+
+A future rebuild from source reproduces neutral assets by re-running the
+build followed by this pass (the build script's female morph already
+includes a partial anchor-collapse; this pass neutralises both bodies
+uniformly afterwards).
 
 ## Contract for replacement assets
 
@@ -92,6 +122,7 @@ crash, show a blank canvas, or silently substitute a low-quality mesh.
 ATLAS_DIR=/path/to/human-atlas/public/models python3 scripts/build_body_asset.py
 python3 scripts/build_studio_hdr.py
 ./scripts/compress-models.sh   # Draco: ~634 KB -> ~80 KB per body
+node scripts/neutralise-universal.mjs  # universal anatomy (Draco in/out)
 ```
 
 The `_REGIONID` channel survives Draco quantization integer-exact (all 81
