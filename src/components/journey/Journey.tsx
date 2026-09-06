@@ -1,7 +1,7 @@
 /**
  * Minimal patient journey.
  *
- * welcome → intake (5 fields) → tap the body → exercises.
+ * welcome → select a body region → pinpoint the exact spot → safety questions → exercises.
  *
  * The 3D BodyViewer internals are untouched. The long questionnaires
  * (red-flag, precaution, onset, movement / timing screens) are not part of
@@ -18,7 +18,7 @@ import { loadConsent, saveConsent } from '../../privacy/consent';
 import { clearAllPatientData, type PersistMode } from '../../privacy/storage';
 import { loadIntake, saveIntake, clearIntake, type Intake } from '../../privacy/intake';
 import { GROUP_LABELS, REGIONS, regionLabel } from '../body/regions';
-import type { BodyView, Gender, Locale, ViewerMode } from '../body/types';
+import type { BodyView, Gender, Locale, ViewerMode, PainPin, PointConfirmPayload } from '../body/types';
 
 import '../../app.css';
 import '../guided/guided.css';
@@ -40,7 +40,8 @@ const COPY = {
     results: 'Your exercises',
     empty: 'There is nothing published for this area yet.',
     unrouted: 'Here is everything published for this area.',
-    tapBody: 'Tap where it is on the body',
+    tapBody: 'Tap the painful area on the body',
+    pinpoint: 'Now tap the exact spot that hurts',
     front: 'Front',
     backView: 'Back',
     male: 'Male',
@@ -67,7 +68,8 @@ const COPY = {
     results: 'تمارينك',
     empty: 'لا يوجد محتوى منشور لهذه المنطقة بعد.',
     unrouted: 'إليك جميع التمارين المنشورة لهذه المنطقة.',
-    tapBody: 'اضغط على المكان في الجسم',
+    tapBody: 'اضغط على منطقة الألم في الجسم',
+    pinpoint: 'الآن اضغط على موضع الألم بالضبط',
     front: 'أمامي',
     backView: 'خلفي',
     male: 'ذكر',
@@ -90,7 +92,8 @@ export default function Journey() {
   const [step, setStep] = useState<Step>(() => {
     const consent = loadConsent();
     if (!consent) return 'welcome';
-    return loadIntake() ? 'body' : 'intake';
+    // Location comes before questions: users should see the 3D workflow immediately.
+    return 'body';
   });
 
   const [notMine, setNotMine] = useState(false);
@@ -101,6 +104,7 @@ export default function Journey() {
   const [selectedRegionId, setSelectedRegionId] = useState<string | null>(null);
   const [showList, setShowList] = useState(false);
   const [bodyArea, setBodyArea] = useState<string | null>(null);
+  const [pin, setPin] = useState<PainPin | null>(null);
 
   const t = COPY[locale];
   const isRtl = locale === 'ar';
@@ -124,7 +128,7 @@ export default function Journey() {
   const handleConsent = () => {
     const persistMode: PersistMode = notMine ? 'session' : 'device';
     saveConsent(locale, persistMode);
-    setStep('intake');
+    setStep('body');
   };
 
   const handleIntake = (input: Omit<Intake, 'savedAt'>) => {
@@ -132,20 +136,28 @@ export default function Journey() {
     const next: Intake = { ...input, savedAt: new Date().toISOString() };
     setIntake(next);
     setGender(input.sex);
-    setStep('body');
+    setStep(pin ? 'results' : 'body');
   };
 
   const pickRegion = useCallback((id: string) => {
     setSelectedRegionId(id);
     const area = areaForRegion(CONTENT, id);
     if (area) setBodyArea(area);
+    setPin(null);
     setMode('pinpoint');
   }, []);
 
-  const goResults = () => {
-    if (!bodyArea) return;
-    setStep('results');
-  };
+  const handlePointConfirm = useCallback((point: PointConfirmPayload) => {
+    const nextPin: PainPin = {
+      id: `pain-${Date.now()}`,
+      regionId: point.regionId,
+      point: point.point,
+      normal: point.normal,
+      intensity: intake?.pain ? Math.max(1, Math.min(5, Math.round(intake.pain / 2))) : 3,
+    };
+    setPin(nextPin);
+    setStep('intake');
+  }, [intake?.pain]);
 
   const clear = () => {
     clearAllPatientData();
@@ -219,11 +231,16 @@ export default function Journey() {
                 mode={mode}
                 locale={locale}
                 selectedRegionId={selectedRegionId}
-                pins={[]}
+                pins={pin ? [pin] : []}
                 onRegionHover={() => {}}
                 onRegionSelect={pickRegion}
-                onRegionClear={() => setSelectedRegionId(null)}
-                onPointConfirm={() => {}}
+                onRegionClear={() => {
+                  setSelectedRegionId(null);
+                  setBodyArea(null);
+                  setPin(null);
+                  setMode('select');
+                }}
+                onPointConfirm={handlePointConfirm}
               />
               <div className="viewer-search">
                 <RegionSearch locale={locale} selectedRegionId={selectedRegionId} onSelect={pickRegion} />
@@ -253,11 +270,13 @@ export default function Journey() {
             <aside className={`map-sheet${selectedRegionId ? ' open' : ''}`}>
               <p className="map-hint">
                 {selectedRegionId
-                  ? regionLabel(selectedRegionId, locale)
+                  ? pin
+                    ? regionLabel(selectedRegionId, locale)
+                    : t.pinpoint
                   : t.tapBody}
               </p>
-              {bodyArea && (
-                <button className="gf-btn gf-btn-primary body-cta" onClick={goResults}>
+              {pin && (
+                <button className="gf-btn gf-btn-primary body-cta" onClick={() => setStep('intake')}>
                   {t.continue}
                 </button>
               )}

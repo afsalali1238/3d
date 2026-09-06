@@ -114,7 +114,14 @@ export function resolveOutcome(
     }
   }
 
-  const areaExercises = selectPublished(bundle.exercises).filter((e) => e.bodyArea === bodyArea);
+  const publishedExercises = selectPublished(bundle.exercises);
+  const areaExercises = publishedExercises.filter((e) => e.bodyArea === bodyArea);
+  // A body map can contain regions that are not yet authored as a dedicated
+  // route. Never leave the user at a dead end: use reviewed global exercises
+  // as a clearly labelled fallback until area-specific content exists.
+  const availableExercises = areaExercises.length
+    ? areaExercises
+    : publishedExercises.filter((e) => e.bodyArea === 'global');
 
   // 2 — exact route lookup
   const path = normaliseAnswerPath(answers);
@@ -126,13 +133,13 @@ export function resolveOutcome(
     if (route.outcome === 'escalate') {
       return { kind: 'escalate', escalationId: route.escalationId, reason: 'routed' };
     }
-    const byId = new Map(areaExercises.map((e) => [e.id, e]));
+    const byId = new Map(availableExercises.map((e) => [e.id, e]));
     const picked = route.exerciseIds.map((id) => byId.get(id)).filter((e): e is Exercise => !!e);
     return finish(picked, false);
   }
 
   // 3 — unrouted is a safe state by construction
-  return finish(areaExercises, true);
+  return finish(availableExercises, true);
 
   function finish(list: Exercise[], unrouted: boolean): Outcome {
     if (list.length === 0) return { kind: 'empty', bodyArea };
