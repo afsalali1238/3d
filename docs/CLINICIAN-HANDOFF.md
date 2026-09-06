@@ -9,9 +9,24 @@ marked as such. The app renders your words verbatim and never generates alternat
 
 ---
 
-## A. Blocking decision — Medical Director (D8)
+## A. Regulatory status — RESOLVED 2026-09-06
 
-The guided flow is **not built** until this is answered in writing.
+**D8 is closed.** This is not a DHA/MOHAP-regulated advertising/advice project, so the
+classification question below no longer blocks anything. The guided flow is built.
+
+**What did not change.** Removing the regulator removes a *compliance* gate, not the *duty of
+care*. A real physiotherapist recommending exercises to real patients still carries clinical
+responsibility. So three things are retained deliberately:
+
+1. **Red-flag escalation** — the harm-prevention feature. Kept in full.
+2. **The published + signed gate** — you control what goes out under your name.
+3. **No condition names** — now a product decision (it keeps this from becoming a
+   symptom-checker), enforced by the same automated scan.
+
+<details>
+<summary>Original D8 questions, retained for the record</summary>
+
+The guided flow was previously **not built** until this was answered in writing.
 
 1. Under DHA/MOHAP, does a questionnaire that outputs personalised exercise recommendations keep
    this site on the **patient-education** side, or does it become a regulated **medical
@@ -23,6 +38,8 @@ The guided flow is **not built** until this is answered in writing.
 
 Until (1) is answered, build work is confined to P0 (region search, profile selector, RTL,
 validation machinery) — none of which renders clinical content.
+
+</details>
 
 ---
 
@@ -116,11 +133,12 @@ movement* correctly. Text approval does not carry over to motion. Sign-off is re
 
 | # | Question | Owner |
 |---|---|---|
-| 1 | D8 classification + disclaimer wording (**blocking**) | Medical Director |
-| 2 | Guided flow as default entry point, or a labelled choice alongside browsing? | Clinician + MD |
+| 1 | ~~D8 classification~~ — **resolved, not regulated** | ~~Medical Director~~ |
+| 2 | Guided flow as default entry point, or a labelled choice alongside browsing? | Clinician |
 | 3 | Confirm or replace the four age bands | Clinician |
 | 4 | Maximum questions before it feels like an interrogation (build recommends 2–3) | Clinician |
 | 5 | Should the printable handout include the patient's answers, or exercises only? | Clinician |
 | 6 | Animation house style — figure appearance, camera angles, clip length — agreed once, up front | Clinician + build |
+| 9 | **Review the demo flow at `?guided=1`** — lower back, placeholder content. Does the shape of the questions work for you? | Clinician |
 | 7 | Confirm the region → body-area grouping (B1) | Clinician |
 | 8 | Is the "female" figure — currently a reshape of a male reference scan, not a female scan — acceptable to present as a female body form? | Clinician |

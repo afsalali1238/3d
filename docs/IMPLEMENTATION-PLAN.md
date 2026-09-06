@@ -198,10 +198,21 @@ not built until requested.
 flies there, and their profile persists locally. Zero clinical content exists, and the machinery to
 reject un-reviewed content is already running in CI.
 
-### P1 — Guided flow, still media — **BLOCKED ON D8**
+### P1 — Guided flow, still media — **UNBLOCKED** (2026-09-06)
 
-Do not start P1 UI work before the Medical Director's D8 ruling and disclaimer wording are in hand.
-The content pipeline (P0-7/8) is *not* blocked — it only rejects content, it never renders it.
+D8 resolved: this is not a DHA/MOHAP-regulated project, so the classification gate and the
+disclaimer-wording dependency are dropped.
+
+**What survives the removal of the regulator, and why** — these were never only compliance
+artifacts:
+
+| Retained | Now justified by |
+|---|---|
+| Red-flag escalation | Duty of care. A real clinician recommending exercises to real patients carries this regardless of advertising law. This is the harm-prevention feature. |
+| Published + `reviewed_by` gate | The clinician controls what goes out under her name. |
+| D-001 no condition names | **Product** decision now, not legal: it is what keeps this from becoming a symptom-checker. |
+
+Dropped: D8 as a phase gate, mandated disclaimer wording, Medical Director sign-off as a blocker.
 
 | # | Task |
 |---|---|
