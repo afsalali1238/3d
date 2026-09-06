@@ -94,3 +94,27 @@ describe('R2 — one render gate', () => {
     expect(gf).not.toMatch(/status === 'published'/);
   });
 });
+
+describe('the sheet is the source of truth', () => {
+  it('the app imports the generated bundle, not the placeholder module', () => {
+    const app = read('src/App.tsx');
+    expect(app).toContain("from './content/bundle.gen'");
+    expect(app).not.toContain("from './content/placeholder'");
+  });
+
+  it('bundle.gen.ts is generated, not hand-edited', () => {
+    const gen = read('src/content/bundle.gen.ts');
+    expect(gen).toContain('AUTO-GENERATED');
+    expect(gen).toContain('npm run content:build');
+  });
+
+  it('placeholder.ts is only referenced by tooling and tests, never by UI', () => {
+    const ui = SRC.filter(
+      (p) => /components\//.test(p) && !p.endsWith('.test.ts') && read(p).includes('content/placeholder'),
+    );
+    // GuidedFlow may import the SIGNATURE constant for badging, nothing else
+    for (const p of ui) {
+      expect(read(p)).toMatch(/import \{ PLACEHOLDER_SIGNATURE \}/);
+    }
+  });
+});

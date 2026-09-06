@@ -16,6 +16,16 @@ jobs:
           cache: npm
       - run: npm ci
 
+      # Clinician-authored content: validate and compile before anything else
+      - name: Validate content
+        run: npx vite-node scripts/content-check.ts
+
+      - name: Build content bundle
+        run: npx vite-node scripts/content-build.ts
+
+      - name: Content bundle is committed and up to date
+        run: git diff --exit-code src/content/bundle.gen.ts
+
       # Type safety
       - name: Typecheck
         run: npx tsc -b --noEmit

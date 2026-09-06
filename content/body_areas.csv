@@ -1,0 +1,3 @@
+body_area,label_en,label_ar,region_ids
+lower_back,Lower Back,أسفل الظهر,lumbar_spine|sacrum_si|left_oblique|right_oblique
+neck,Neck,الرقبة,cervical_upper|cervical_lower|throat|left_trapezius|right_trapezius

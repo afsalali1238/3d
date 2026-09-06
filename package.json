@@ -9,7 +9,10 @@
     "preview": "vite preview --host 0.0.0.0",
     "test": "vitest run",
     "test:watch": "vitest",
-    "verify": "tsc -b --noEmit false && vite build && vitest run"
+    "verify": "vite-node scripts/content-build.ts && tsc -b --noEmit && vite build && vitest run",
+    "content:export": "vite-node scripts/content-export.ts",
+    "content:check": "vite-node scripts/content-check.ts",
+    "content:build": "vite-node scripts/content-build.ts"
   },
   "dependencies": {
     "@react-three/drei": "^9.114.3",

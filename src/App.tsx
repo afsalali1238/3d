@@ -9,7 +9,7 @@ import RegionSearch from './components/search/RegionSearch';
 import GuidedFlow from './components/guided/GuidedFlow';
 import ProfileGate from './components/guided/ProfileGate';
 import { loadProfile } from './components/guided/profile';
-import { placeholderContent } from './content/placeholder';
+import { CONTENT } from './content/bundle.gen';
 import { areaForRegion } from './content/routing';
 import type { Profile } from './content/routing';
 import { GROUP_LABELS, REGIONS, REGION_BY_ID, regionLabel } from './components/body/regions';
@@ -107,7 +107,7 @@ export default function App() {
   // selecting a region that maps to a body area opens the guided flow
   useEffect(() => {
     if (!guidedEnabled || !profileAsked || !selectedRegionId) return;
-    const area = areaForRegion(placeholderContent, selectedRegionId);
+    const area = areaForRegion(CONTENT, selectedRegionId);
     if (area) setGuidedArea(area);
   }, [guidedEnabled, profileAsked, selectedRegionId]);
 
@@ -276,7 +276,7 @@ export default function App() {
 
           {guidedEnabled && profileAsked && guidedArea && (
             <GuidedFlow
-              bundle={placeholderContent}
+              bundle={CONTENT}
               bodyArea={guidedArea}
               locale={locale}
               profile={profile ?? {}}
