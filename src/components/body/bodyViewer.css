@@ -1,0 +1,220 @@
+/* BodyViewer module styles — clinical, calm, premium */
+
+.bv-root {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 320px;
+  background: radial-gradient(120% 90% at 50% 30%, #1c232c 0%, #12161c 55%, #0c0f13 100%);
+  overflow: hidden;
+  border-radius: inherit;
+}
+
+.bv-root canvas {
+  touch-action: none;
+  outline: none;
+  cursor: grab;
+}
+
+/* ---------------------------------------------------------------- loader */
+.bv-loader {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  background: radial-gradient(120% 90% at 50% 30%, #1c232c 0%, #12161c 55%, #0c0f13 100%);
+  z-index: 30;
+  pointer-events: none;
+}
+
+.bv-loader-silhouette {
+  width: 84px;
+  height: 190px;
+  fill: rgba(148, 163, 184, 0.16);
+  animation: bv-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes bv-pulse {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+
+.bv-loader-bar {
+  width: 180px;
+  height: 3px;
+  border-radius: 2px;
+  background: rgba(148, 163, 184, 0.18);
+  overflow: hidden;
+}
+
+.bv-loader-fill {
+  height: 100%;
+  background: #00d4a8;
+  border-radius: 2px;
+  transition: width 200ms ease;
+}
+
+.bv-loader-pct {
+  font-size: 13px;
+  color: #8b98a9;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.06em;
+}
+
+/* --------------------------------------------------------------- labels */
+.bv-region-html {
+  pointer-events: none;
+}
+
+.bv-region-tag {
+  pointer-events: none;
+  background: rgba(13, 17, 22, 0.82);
+  border: 1px solid rgba(0, 212, 168, 0.45);
+  color: #e8eef5;
+  font-size: 13px;
+  line-height: 1;
+  padding: 8px 12px;
+  border-radius: 999px;
+  white-space: nowrap;
+  backdrop-filter: blur(6px);
+  transform: translateY(-30px);
+}
+
+.bv-placeholder-tag {
+  background: rgba(190, 60, 60, 0.92);
+  color: #fff;
+  font-size: 13px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  white-space: nowrap;
+}
+
+/* -------------------------------------------------------------- confirm */
+.bv-confirm {
+  position: absolute;
+  left: 50%;
+  bottom: max(18px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  background: rgba(16, 20, 26, 0.92);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 16px;
+  padding: 16px 18px;
+  width: min(92%, 420px);
+  backdrop-filter: blur(10px);
+  z-index: 25;
+}
+
+.bv-confirm-q {
+  color: #e8eef5;
+  font-size: 16px;
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.bv-confirm-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.bv-btn {
+  appearance: none;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  background: rgba(148, 163, 184, 0.08);
+  color: #cbd5e1;
+  font-size: 14px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  cursor: pointer;
+  min-height: 44px;
+  transition: background 140ms ease, border-color 140ms ease, color 140ms ease;
+}
+
+.bv-btn:hover {
+  background: rgba(148, 163, 184, 0.16);
+  color: #eef3f8;
+}
+
+.bv-btn-primary {
+  background: #00d4a8;
+  border-color: #00d4a8;
+  color: #06251e;
+  font-weight: 600;
+}
+
+.bv-btn-primary:hover {
+  background: #17e0b6;
+  color: #06251e;
+}
+
+/* -------------------------------------------------- keyboard region list */
+.bv-sr-regions {
+  position: absolute;
+  inset-inline-start: 0;
+  bottom: 0;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.bv-sr-regions button {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  border: 0;
+  padding: 0;
+}
+
+.bv-sr-regions button:focus-visible {
+  position: fixed;
+  inset-inline-start: 16px;
+  bottom: 16px;
+  width: auto;
+  height: auto;
+  clip-path: none;
+  z-index: 60;
+  background: #0d1116;
+  color: #00d4a8;
+  border: 2px solid #00d4a8;
+  border-radius: 999px;
+  padding: 10px 16px;
+  font-size: 14px;
+}
+
+/* ------------------------------------------------------------ 2D fallback */
+.bv-fallback2d {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.bv-fallback2d-label {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #e8eef5;
+  font-size: 15px;
+  background: rgba(16, 20, 26, 0.85);
+  border: 1px solid rgba(0, 212, 168, 0.4);
+  padding: 8px 14px;
+  border-radius: 999px;
+}
+
+.bv-fallback2d-note {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #66707d;
+  font-size: 12px;
+}
