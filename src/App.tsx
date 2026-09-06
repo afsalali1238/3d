@@ -4,7 +4,14 @@
  * and talks to the 3D module exclusively through the BodyViewer prop API.
  */
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import BodyViewer from './components/body/BodyViewer';
+import BodyViewerLazy from './components/body/BodyViewerLazy';
+import RegionSearch from './components/search/RegionSearch';
+import GuidedFlow from './components/guided/GuidedFlow';
+import ProfileGate from './components/guided/ProfileGate';
+import { loadProfile } from './components/guided/profile';
+import { CONTENT } from './content/bundle.gen';
+import { areaForRegion } from './content/routing';
+import type { Profile } from './content/routing';
 import { GROUP_LABELS, REGIONS, REGION_BY_ID, regionLabel } from './components/body/regions';
 import type {
   BodyView,
@@ -78,6 +85,32 @@ export default function App() {
   const [resetSignal, setResetSignal] = useState(0);
   const [toast, setToast] = useState<string | null>(null);
 
+  /* ---- guided flow (feature-flagged: ?guided=1) ------------------------ */
+  const guidedEnabled = useMemo(
+    () => typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('guided'),
+    [],
+  );
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [profileAsked, setProfileAsked] = useState(false);
+  const [guidedArea, setGuidedArea] = useState<string | null>(null);
+
+  // restore a previously saved device-local profile
+  useEffect(() => {
+    if (!guidedEnabled) return;
+    const p = loadProfile();
+    if (p) {
+      setProfile({ sex: p.sex, ageBand: p.ageBand });
+      setProfileAsked(true);
+    }
+  }, [guidedEnabled]);
+
+  // selecting a region that maps to a body area opens the guided flow
+  useEffect(() => {
+    if (!guidedEnabled || !profileAsked || !selectedRegionId) return;
+    const area = areaForRegion(CONTENT, selectedRegionId);
+    if (area) setGuidedArea(area);
+  }, [guidedEnabled, profileAsked, selectedRegionId]);
+
   const t = T[locale];
 
   // Escape backs out: pinpoint -> select -> nothing selected
@@ -97,6 +130,12 @@ export default function App() {
   const handleRegionSelect = useCallback((id: string) => {
     setSelectedRegionId(id);
     setMode('pinpoint');
+  }, []);
+
+  const handleProfileDone = useCallback((p: Profile) => {
+    setProfile(p);
+    setProfileAsked(true);
+    if (p.sex) setGender(p.sex);
   }, []);
 
   const handleConfirm = useCallback(
@@ -164,7 +203,7 @@ export default function App() {
 
       <main className="app-main">
         <div className="viewer-wrap">
-          <BodyViewer
+          <BodyViewerLazy
             gender={gender}
             view={view}
             mode={mode}
@@ -178,6 +217,17 @@ export default function App() {
             onPointConfirm={handleConfirm}
             onError={(e) => console.error('BodyViewer error:', e)}
           />
+
+          <div className="viewer-search">
+            <RegionSearch
+              locale={locale}
+              selectedRegionId={selectedRegionId}
+              onSelect={(id) => {
+                setSelectedRegionId(id);
+                setMode('pinpoint');
+              }}
+            />
+          </div>
 
           {/* viewer chrome */}
           <div className="viewer-toolbar">
@@ -220,6 +270,26 @@ export default function App() {
         </div>
 
         <aside className="side-panel">
+          {guidedEnabled && !profileAsked && (
+            <ProfileGate locale={locale} onDone={handleProfileDone} />
+          )}
+
+          {guidedEnabled && profileAsked && guidedArea && (
+            <GuidedFlow
+              bundle={CONTENT}
+              bodyArea={guidedArea}
+              locale={locale}
+              profile={profile ?? {}}
+              onExit={() => {
+                setGuidedArea(null);
+                setSelectedRegionId(null);
+                setMode('select');
+              }}
+            />
+          )}
+
+          {!(guidedEnabled && (!profileAsked || guidedArea)) && (
+          <>
           <section>
             <h2>{t.selected}</h2>
             <div className="selected-box">
@@ -281,6 +351,8 @@ export default function App() {
               </ul>
             )}
           </section>
+          </>
+          )}
         </aside>
       </main>
 

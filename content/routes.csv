@@ -1,0 +1,5 @@
+route_id,body_area,answer_path,outcome,exercise_ids,escalation_message_id,status,reviewed_by,reviewed_on
+lb_r1,lower_back,movement=bending_forward&timing=mornings,exercises,lb_ex_pelvic_tilt|lb_ex_cat_camel,,published,PLACEHOLDER,2026-09-06
+lb_r2,lower_back,movement=bending_forward&timing=after_sitting,exercises,lb_ex_cat_camel|lb_ex_sit_stand|lb_ex_knee_to_chest,,published,PLACEHOLDER,2026-09-06
+lb_r3,lower_back,movement=leaning_back&timing=after_sitting,exercises,lb_ex_knee_to_chest|lb_ex_pelvic_tilt,,published,PLACEHOLDER,2026-09-06
+lb_r4,lower_back,movement=twisting&timing=during_activity,exercises,lb_ex_cat_camel|lb_ex_pelvic_tilt,,published,PLACEHOLDER,2026-09-06

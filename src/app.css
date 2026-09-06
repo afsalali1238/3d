@@ -385,3 +385,15 @@
     min-width: 0;
   }
 }
+
+/* region search, floated over the viewer */
+.viewer-search {
+  position: absolute;
+  inset-block-start: 12px;
+  inset-inline-start: 12px;
+  inline-size: min(340px, calc(100% - 24px));
+  z-index: 6;
+}
+@media (max-width: 720px) {
+  .viewer-search { inline-size: calc(100% - 24px); }
+}

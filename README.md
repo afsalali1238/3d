@@ -6,6 +6,16 @@ real depth, real orbit — no primitive mannequin, no 2D hotspot fake.
 
 ![module](build/seg-front.png)
 
+## Product direction
+
+The viewer is the locator tier of a planned guided anatomy → exercise flow. See `docs/`:
+
+- [`docs/GUIDED-FLOW-CONCEPT.md`](docs/GUIDED-FLOW-CONCEPT.md) — the concept & build brief
+- [`docs/IMPLEMENTATION-PLAN.md`](docs/IMPLEMENTATION-PLAN.md) — corrected baseline, schemas, phase plan
+- [`docs/CLINICIAN-HANDOFF.md`](docs/CLINICIAN-HANDOFF.md) — what the clinician / Medical Director must supply
+
+No clinical content exists in this repo, and the guided flow is blocked on decision D8.
+
 ## Quick start
 
 ```bash

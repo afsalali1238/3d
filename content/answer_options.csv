@@ -1,0 +1,9 @@
+option_id,question_id,key,label_en,label_ar,order,red_flag,escalation_message_id
+lb_q1_a,lb_q1,bending_forward,Bending forward,الانحناء للأمام,1,no,
+lb_q1_b,lb_q1,leaning_back,Leaning backward,الميل للخلف,2,no,
+lb_q1_c,lb_q1,twisting,Twisting side to side,الالتفاف يميناً ويساراً,3,no,
+lb_q1_d,lb_q1,numbness_weakness,"I have numbness, tingling or weakness in a leg",أشعر بخدر أو تنميل أو ضعف في الساق,4,yes,esc_see_someone
+lb_q2_a,lb_q2,mornings,In the morning,في الصباح,1,no,
+lb_q2_b,lb_q2,after_sitting,After sitting a long time,بعد الجلوس لفترة طويلة,2,no,
+lb_q2_c,lb_q2,during_activity,During or after activity,أثناء النشاط أو بعده,3,no,
+lb_q2_d,lb_q2,night_pain,At night — it wakes me up,في الليل — يوقظني من النوم,4,yes,esc_see_someone
