@@ -264,3 +264,52 @@
 @media (prefers-reduced-motion: reduce) {
   .step-dots i { transition: none; }
 }
+
+/* ---------------------------------------------------------- minimal intake */
+.gf-intake {
+  max-width: 560px;
+  margin-inline: auto;
+  padding-bottom: 24px;
+}
+.gf-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.gf-input {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: #94a3b8;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.gf-input input {
+  width: 100%;
+  min-height: 52px;
+  padding: 10px 14px;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  border-radius: 12px;
+  background: rgba(30, 41, 59, 0.55);
+  color: #e2e8f0;
+  font: inherit;
+  font-size: 17px;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.gf-input input:focus-visible {
+  outline: 2px solid #00d4a8;
+  outline-offset: 2px;
+}
+.gf-intake-pain {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+@media (max-width: 520px) {
+  .gf-grid {
+    grid-template-columns: 1fr;
+  }
+}

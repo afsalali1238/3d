@@ -158,6 +158,7 @@ stop the build — content with errors never reaches a patient.
 
 ## The current content is a placeholder
 
-Everything shipped today is signed `PLACEHOLDER` and shows an orange **DEMO CONTENT** badge in the
-app. It exists so you can see the flow working. Replace it with your own rows and put your name in
-`reviewed_by`; the badge disappears automatically once the `PLACEHOLDER` signature is gone.
+Everything shipped today is signed `PLACEHOLDER`. The `questions.csv`, `red_flags.csv` and
+`precautions.csv` rows are currently `draft`, so the patient journey intentionally goes
+straight from intake to the body map to published exercises. Replace the placeholder rows with
+your own and put your name in `reviewed_by` to bring the more detailed questions back.
