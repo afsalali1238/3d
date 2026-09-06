@@ -5,6 +5,12 @@
   border: 1px solid rgba(148, 163, 184, 0.14);
 }
 
+.ex-stage {
+  display: grid;
+  grid-template-columns: 1fr 92px;
+  background: #0a0d11;
+}
+
 .ex-media {
   position: relative;
   aspect-ratio: 4 / 5;
@@ -13,41 +19,72 @@
 }
 
 .ex-media img {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  animation: ken 12s ease-in-out infinite alternate;
+  opacity: 0;
+  transition: opacity 420ms ease;
 }
+.ex-media img.on { opacity: 1; }
 
-.ex-fallback {
-  width: 100%;
-  height: 100%;
-  background: radial-gradient(circle at 50% 40%, #1b3d38, #0a0d11);
-}
-
-.ex-live {
+.ex-play {
   position: absolute;
-  inset-inline-end: 12px;
-  inset-block-start: 12px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 10px;
-  border-radius: 999px;
-  background: rgba(6, 10, 14, 0.7);
-  color: #00d4a8;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-.ex-live i {
-  width: 8px;
-  height: 8px;
+  inset-inline-start: 10px;
+  inset-block-end: 10px;
+  width: 44px;
+  height: 44px;
+  border: 0;
   border-radius: 50%;
-  background: #00d4a8;
-  animation: blink 1.4s ease-in-out infinite;
+  background: rgba(6, 10, 14, 0.72);
+  color: #e8eef5;
+  font-size: 14px;
+  cursor: pointer;
+  z-index: 2;
 }
+.ex-cap {
+  position: absolute;
+  inset-inline-end: 10px;
+  inset-block-end: 12px;
+  z-index: 2;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(6, 10, 14, 0.72);
+  color: #00d4a8;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.mg {
+  display: grid;
+  place-items: center;
+  padding: 8px 4px;
+  border-inline-start: 1px solid rgba(148, 163, 184, 0.12);
+}
+.mg-svg { width: 78px; height: 112px; }
+
+.mg-tilt .mg-spine { animation: tilt 2.2s ease-in-out infinite; transform-origin: 60px 86px; }
+.mg-fold .mg-leg { animation: fold 2.2s ease-in-out infinite; transform-origin: 52px 70px; }
+.mg-arch .mg-spine { animation: arch 2.4s ease-in-out infinite; transform-origin: 60px 58px; }
+.mg-rise .mg-body, .mg-rise .mg-head { animation: rise 2.6s ease-in-out infinite; }
+.mg-tuck .mg-head { animation: tuck 2s ease-in-out infinite; transform-origin: 60px 42px; }
+.mg-turn .mg-head { animation: turn 2.4s ease-in-out infinite; transform-origin: 60px 42px; }
+.mg-squeeze .mg-arms { animation: squeeze 1.8s ease-in-out infinite; transform-origin: 60px 50px; }
+.mg-lift .mg-hips { animation: lift 2.2s ease-in-out infinite; transform-origin: 50px 96px; }
+.mg-bend .mg-leg { animation: bend 2s ease-in-out infinite; transform-origin: 64px 70px; }
+.mg-circle .mg-foot { animation: orbit 2.4s linear infinite; transform-origin: 62px 92px; }
+
+@keyframes tilt { 0%,100% { transform: rotate(6deg); } 50% { transform: rotate(-8deg); } }
+@keyframes fold { 0%,100% { transform: rotate(8deg); } 50% { transform: rotate(-42deg); } }
+@keyframes arch { 0%,100% { transform: translateY(-6px) scaleY(0.92); } 50% { transform: translateY(8px) scaleY(1.12); } }
+@keyframes rise { 0%,100% { transform: translateY(18px); } 50% { transform: translateY(0); } }
+@keyframes tuck { 0%,100% { transform: translateX(4px); } 50% { transform: translateX(-6px); } }
+@keyframes turn { 0%,100% { transform: scaleX(1); } 50% { transform: scaleX(0.45) translateX(8px); } }
+@keyframes squeeze { 0%,100% { transform: scaleX(1.08); } 50% { transform: scaleX(0.86); } }
+@keyframes lift { 0%,100% { transform: translateY(10px); } 50% { transform: translateY(-8px); } }
+@keyframes bend { 0%,100% { transform: rotate(0); } 50% { transform: rotate(28deg); } }
+@keyframes orbit { from { transform: rotate(0); } to { transform: rotate(360deg); } }
 
 .ex-body {
   padding: 16px 16px 18px;
@@ -55,72 +92,22 @@
   flex-direction: column;
   gap: 8px;
 }
-.ex-body h3 {
-  margin: 0;
-  font-size: 1.15rem;
-}
-.ex-purpose {
-  margin: 0;
-  color: #94a3b8;
-  font-size: 0.95rem;
-  line-height: 1.45;
-}
-.ex-steps {
-  margin: 8px 0 0;
-  padding-inline-start: 1.2em;
-  color: #dbe4ee;
-  font-size: 0.95rem;
-  line-height: 1.6;
-}
-.ex-dose {
-  margin: 4px 0 0;
-  font-weight: 650;
-  color: #00d4a8;
-}
-.ex-stop {
-  margin: 0;
-  color: #fdba74;
-  font-size: 0.9rem;
-  line-height: 1.45;
-}
-
-@keyframes ken {
-  from { transform: scale(1); }
-  to { transform: scale(1.08); }
-}
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.25; }
-}
-
-.motion-tilt img { animation: ken 10s ease-in-out infinite alternate, bob 3.2s ease-in-out infinite; }
-.motion-fold img { animation: ken 11s ease-in-out infinite alternate; }
-.motion-arch img { animation: ken 8s ease-in-out infinite alternate; }
-.motion-rise img { animation: ken 7s ease-in-out infinite alternate; }
-.motion-tuck img { animation: ken 9s ease-in-out infinite alternate; }
-.motion-turn img { animation: ken 8s ease-in-out infinite alternate; }
-.motion-squeeze img { animation: ken 6s ease-in-out infinite alternate; }
-.motion-lift img { animation: ken 7s ease-in-out infinite alternate, bob 3.6s ease-in-out infinite; }
-.motion-bend img { animation: ken 8s ease-in-out infinite alternate; }
-.motion-circle img { animation: spinsoft 10s linear infinite; }
-
-@keyframes bob {
-  0%, 100% { object-position: 50% 46%; }
-  50% { object-position: 50% 54%; }
-}
-@keyframes spinsoft {
-  from { transform: scale(1.04) rotate(-1.5deg); }
-  to { transform: scale(1.04) rotate(1.5deg); }
-}
+.ex-body h3 { margin: 0; font-size: 1.15rem; }
+.ex-purpose { margin: 0; color: #94a3b8; font-size: 0.95rem; line-height: 1.45; }
+.ex-steps { margin: 8px 0 0; padding-inline-start: 1.2em; color: #dbe4ee; font-size: 0.95rem; line-height: 1.6; }
+.ex-dose { margin: 4px 0 0; font-weight: 650; color: #00d4a8; }
+.ex-stop { margin: 0; color: #fdba74; font-size: 0.9rem; line-height: 1.45; }
 
 @media (prefers-reduced-motion: reduce) {
-  .ex-media img, .ex-live i { animation: none; }
+  .mg-svg * { animation: none !important; }
+  .ex-media img { transition: none; }
 }
 
 @media (min-width: 720px) {
   .ex-card.session {
     display: grid;
-    grid-template-columns: minmax(240px, 42%) 1fr;
+    grid-template-columns: minmax(260px, 46%) 1fr;
   }
-  .ex-card.session .ex-media { aspect-ratio: auto; min-height: 280px; }
+  .ex-card.session .ex-stage { min-height: 320px; }
+  .ex-card.session .ex-media { aspect-ratio: auto; }
 }
