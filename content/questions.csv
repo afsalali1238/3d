@@ -4,4 +4,5 @@ g_onset,global,onset,"Did this start after a particular activity, or has it been
 g_duration,global,duration,Roughly how long has it been present?,منذ متى تقريباً وهو موجود؟,,,2,yes,published,PLACEHOLDER,2026-09-06
 g_irritability,global,irritability,"If it gets stirred up, how long before it settles?",إذا اشتد، كم يمضي قبل أن يهدأ؟,,,3,no,published,PLACEHOLDER,2026-09-06
 g_pattern,global,pattern,When in the day does it tend to bother you most?,في أي وقت من اليوم يزعجك أكثر؟,,,4,yes,published,PLACEHOLDER,2026-09-06
+nk_q1,neck,movement,Which way feels most limited?,أي اتجاه تشعر أنه الأكثر تقييداً؟,,,1,yes,published,PLACEHOLDER,2026-09-06
 lb_q2,lower_back,timing,When does it bother you most?,متى يزعجك أكثر؟,,,2,yes,published,PLACEHOLDER,2026-09-06

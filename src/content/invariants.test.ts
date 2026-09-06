@@ -91,10 +91,12 @@ describe('placeholder containment', () => {
     expect(src).toContain('PLACEHOLDER');
   });
 
-  it('the UI badges any content signed PLACEHOLDER', () => {
+  it('patient UI does not show demo warning copy', () => {
     const gf = read('src/components/guided/GuidedFlow.tsx');
-    expect(gf).toContain('PLACEHOLDER_SIGNATURE');
-    expect(gf).toContain('gf-demo');
+    const j = read('src/components/journey/Journey.tsx');
+    expect(gf).not.toContain('DEMO CONTENT');
+    expect(j).not.toContain('DEMO CONTENT');
+    expect(gf).not.toContain('gf-demo');
   });
 });
 
@@ -113,8 +115,8 @@ describe('the sheet is the source of truth', () => {
   it('the app imports the generated bundle, not the placeholder module', () => {
     const app = read('src/components/journey/Journey.tsx');
     expect(app).toContain("from '../../content/bundle.gen'");
-    expect(app).toMatch(/import \{ PLACEHOLDER_SIGNATURE \}/);
     expect(app).not.toContain('placeholderContent');
+    expect(app).not.toContain("from '../../content/placeholder'");
   });
 
   it('bundle.gen.ts is generated, not hand-edited', () => {

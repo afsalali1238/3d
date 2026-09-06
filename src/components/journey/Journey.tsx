@@ -17,7 +17,7 @@ import { evaluatePrecautions, publishedPrecautions, applyPrecautionHide } from '
 import { evaluateEscalationRules, thresholdValue } from '../../safety/escalationRules';
 import { startEpisode, loadEpisode, appendSession } from '../../episode/store';
 import { resolveTrafficLight } from '../../episode/trafficLight';
-import { PLACEHOLDER_SIGNATURE } from '../../content/placeholder';
+import ExerciseCard from '../exercise/ExerciseCard';
 import { GROUP_LABELS, REGIONS, regionLabel } from '../body/regions';
 import type { BodyView, Gender, Locale, ViewerMode } from '../body/types';
 import type { Irritability } from '../../content/types';
@@ -63,7 +63,6 @@ const COPY = {
     print: 'Print a summary for your visit',
     clear: 'Clear my data',
     contact: 'Contact the clinic',
-    demo: 'DEMO CONTENT — not clinical advice',
     stopped: 'We are not going to guess.',
     browse: 'Browse the body map',
     text: 'Text size',
@@ -132,6 +131,7 @@ export default function Journey() {
   const [nrsAfter, setNrsAfter] = useState(3);
   const [stopMessageId, setStopMessageId] = useState<string | null>(null);
   const [sessionExIds, setSessionExIds] = useState<string[]>([]);
+  const [rfIndex, setRfIndex] = useState(0);
 
   const t = COPY[locale];
   const isRtl = locale === 'ar';
@@ -258,13 +258,16 @@ export default function Journey() {
 
       <main className="journey-main">
         {step === 'welcome' && (
-          <section className="gf">
+          <section className="gf hero">
+            <p className="hero-kicker">{t.app}</p>
             <h2>{t.consentTitle}</h2>
             <p className="gf-hint">{t.consentBody}</p>
-            <label className="gf-privacy">
-              <input type="checkbox" checked={notMine} onChange={(e) => setNotMine(e.target.checked)} /> {t.notMine}
+            <p className="gf-hint">{t.notAdvice}</p>
+            <label className="privacy-row">
+              <input type="checkbox" checked={notMine} onChange={(e) => setNotMine(e.target.checked)} />
+              <span>{t.notMine}</span>
             </label>
-            <div className="gf-actions">
+            <div className="gf-actions sticky-cta">
               <button className="gf-btn gf-btn-primary" onClick={handleConsent}>
                 {t.agree}
               </button>
@@ -272,40 +275,49 @@ export default function Journey() {
           </section>
         )}
 
-        {step === 'red_flags' && (
-          <section className="gf">
-            <h2>{t.rfTitle}</h2>
-            <p className="gf-hint">{t.rfSub}</p>
-            {!redFlagScreenReady(CONTENT) && <p className="gf-note">{t.missingRf}</p>}
-            <ul className="gf-opts">
-              {flags.map((f) => (
-                <li key={f.id} className="rf-row">
-                  <p>{f.prompt[locale]}</p>
-                  <div className="gf-chips">
-                    <button
-                      className={`gf-chip${rfAnswers[f.id] === f.positiveKey ? ' on' : ''}`}
-                      onClick={() => setRfAnswers((a) => ({ ...a, [f.id]: f.positiveKey }))}
-                    >
-                      {t.yes}
-                    </button>
-                    <button
-                      className={`gf-chip${rfAnswers[f.id] === 'no' ? ' on' : ''}`}
-                      onClick={() => setRfAnswers((a) => ({ ...a, [f.id]: 'no' }))}
-                    >
-                      {t.no}
-                    </button>
-                  </div>
-                  {f.reviewedBy === PLACEHOLDER_SIGNATURE && <p className="gf-demo">{t.demo}</p>}
-                </li>
+        {step === 'red_flags' && flags[rfIndex] && (
+          <section className="gf rf-card">
+            <div className="step-dots" aria-hidden>
+              {flags.map((f, i) => (
+                <i key={f.id} className={i === rfIndex ? 'on' : ''} />
               ))}
-            </ul>
-            <div className="gf-actions">
+            </div>
+            <p className="rf-count">
+              {rfIndex + 1} / {flags.length}
+            </p>
+            <h2 className="gf-prompt">{flags[rfIndex].prompt[locale]}</h2>
+            <div className="gf-chips">
               <button
-                className="gf-btn gf-btn-primary"
-                disabled={flags.some((f) => !rfAnswers[f.id])}
-                onClick={finishRedFlags}
+                className={`gf-chip${rfAnswers[flags[rfIndex].id] === flags[rfIndex].positiveKey ? ' on' : ''}`}
+                onClick={() => {
+                  const f = flags[rfIndex];
+                  const next = { ...rfAnswers, [f.id]: f.positiveKey };
+                  setRfAnswers(next);
+                  if (rfIndex + 1 < flags.length) setRfIndex(rfIndex + 1);
+                  else {
+                    const ev = evaluateRedFlags(CONTENT, next);
+                    if (ev.stopped) stopWith(ev.messageId);
+                    else setStep('precautions');
+                  }
+                }}
               >
-                {t.continue}
+                {t.yes}
+              </button>
+              <button
+                className={`gf-chip${rfAnswers[flags[rfIndex].id] === 'no' ? ' on' : ''}`}
+                onClick={() => {
+                  const f = flags[rfIndex];
+                  const next = { ...rfAnswers, [f.id]: 'no' };
+                  setRfAnswers(next);
+                  if (rfIndex + 1 < flags.length) setRfIndex(rfIndex + 1);
+                  else {
+                    const ev = evaluateRedFlags(CONTENT, next);
+                    if (ev.stopped) stopWith(ev.messageId);
+                    else setStep('precautions');
+                  }
+                }}
+              >
+                {t.no}
               </button>
             </div>
           </section>
@@ -358,7 +370,7 @@ export default function Journey() {
         )}
 
         {step === 'body' && (
-          <div className="app-main">
+          <div className="app-main body-step">
             <div className="viewer-wrap">
               <BodyViewerLazy
                 gender={gender}
@@ -412,8 +424,8 @@ export default function Journey() {
                 <h2>{locale === 'ar' ? 'المنطقة المحددة' : 'Selected'}</h2>
                 <div className="selected-box">{selectedRegionId ? regionLabel(selectedRegionId, locale) : '—'}</div>
                 {bodyArea && (
-                  <div className="gf-actions" style={{ marginTop: 16 }}>
-                    <button className="gf-btn gf-btn-primary" onClick={goSymptoms}>
+                  <div className="gf-actions sticky-cta">
+                    <button className="gf-btn gf-btn-primary body-cta" onClick={goSymptoms}>
                       {t.continue}
                     </button>
                   </div>
@@ -493,14 +505,8 @@ export default function Journey() {
             {esc?.reason === 'unrouted' && <p className="gf-note">{t.stopped}</p>}
             <ol className="gf-ex-list">
               {shownExercises.map((e) => (
-                <li key={e.id} className="gf-ex">
-                  <h3>{e.name[locale]}</h3>
-                  <p className="gf-ex-purpose">{e.purpose[locale]}</p>
-                  <p className="gf-ex-dosage">
-                    <strong>{e.dosage[locale]}</strong>
-                  </p>
-                  <p className="gf-ex-safety">{e.safety[locale]}</p>
-                  {e.reviewedBy === PLACEHOLDER_SIGNATURE && <p className="gf-demo">{t.demo}</p>}
+                <li key={e.id}>
+                  <ExerciseCard exercise={e} locale={locale} />
                 </li>
               ))}
             </ol>
@@ -537,21 +543,16 @@ export default function Journey() {
               {shownExercises
                 .filter((e) => sessionExIds.includes(e.id))
                 .map((e) => (
-                  <li key={e.id} className="gf-ex">
-                    <h3>{e.name[locale]}</h3>
-                    <ol className="gf-ex-steps">
-                      {e.steps.map((s, i) => (
-                        <li key={i}>{s[locale]}</li>
-                      ))}
-                    </ol>
-                    <p className="gf-ex-dosage">{e.dosage[locale]}</p>
-                    <p className="gf-ex-safety">{e.safety[locale]}</p>
+                  <li key={e.id}>
+                    <ExerciseCard exercise={e} locale={locale} session />
                   </li>
                 ))}
             </ol>
-            <button className="gf-btn gf-btn-primary" onClick={() => setStep('check')}>
-              {t.doneSession}
-            </button>
+            <div className="sticky-cta">
+              <button className="gf-btn gf-btn-primary" onClick={() => setStep('check')}>
+                {t.doneSession}
+              </button>
+            </div>
           </section>
         )}
 
@@ -613,9 +614,8 @@ export default function Journey() {
           <section className="gf gf-escalate" role="alert">
             <h2>{msg?.title[locale] ?? t.stopped}</h2>
             <p>{msg?.body[locale] ?? t.missingRf}</p>
-            <div className="gf-actions">
+            <div className="gf-actions sticky-cta">
               <button className="gf-btn gf-btn-primary">{t.contact}</button>
-              {msg?.reviewedBy === PLACEHOLDER_SIGNATURE && <p className="gf-demo">{t.demo}</p>}
             </div>
           </section>
         )}

@@ -1,3 +1,6 @@
 body_area,label_en,label_ar,region_ids
 lower_back,Lower Back,أسفل الظهر,lumbar_spine|sacrum_si|left_oblique|right_oblique
 neck,Neck,الرقبة,cervical_upper|cervical_lower|throat|left_trapezius|right_trapezius
+shoulder,Shoulder,الكتف,left_deltoid_anterior|right_deltoid_anterior|left_deltoid_lateral|right_deltoid_lateral|left_deltoid_posterior|right_deltoid_posterior|left_rotator_cuff|right_rotator_cuff
+hip,Hip,الورك,left_glute|right_glute|left_hip_groin|right_hip_groin
+knee,Knee,الركبة,left_knee_anterior|right_knee_anterior|left_knee_medial|right_knee_medial|left_knee_lateral|right_knee_lateral|left_knee_posterior|right_knee_posterior

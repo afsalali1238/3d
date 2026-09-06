@@ -13,7 +13,7 @@ import {
   type Profile,
 } from '../../content/routing';
 import type { ContentBundle, Locale } from '../../content/types';
-import { PLACEHOLDER_SIGNATURE } from '../../content/placeholder';
+import ExerciseCard from '../exercise/ExerciseCard';
 import './guided.css';
 
 type Props = {
@@ -37,7 +37,6 @@ const S = {
       'We are showing all exercises for this area, because narrowing them left nothing to show.',
     empty: 'There is nothing published for this area yet.',
     contact: 'Contact the clinic',
-    demo: 'DEMO CONTENT — not clinical advice',
     dosage: 'How much',
     safety: 'Stop if',
     steps: 'How to do it',
@@ -54,7 +53,6 @@ const S = {
     relaxed: 'نعرض جميع تمارين هذه المنطقة، لأن التصفية لم تترك شيئاً لعرضه.',
     empty: 'لا يوجد محتوى منشور لهذه المنطقة بعد.',
     contact: 'تواصل مع العيادة',
-    demo: 'محتوى تجريبي — ليس نصيحة طبية',
     dosage: 'المقدار',
     safety: 'توقف إذا',
     steps: 'كيفية الأداء',
@@ -98,13 +96,12 @@ export function GuidedFlow({ bundle, bodyArea, locale, profile, onExit, onContin
         </div>
         <h2>{msg.title[locale]}</h2>
         <p>{msg.body[locale]}</p>
-        <div className="gf-actions">
+        <div className="gf-actions sticky-cta">
           <button className="gf-btn gf-btn-primary">{t.contact}</button>
           <button className="gf-btn" onClick={onExit}>
             {t.exit}
           </button>
         </div>
-        {msg.reviewedBy === PLACEHOLDER_SIGNATURE && <p className="gf-demo">{t.demo}</p>}
       </section>
     );
   }
@@ -139,30 +136,13 @@ export function GuidedFlow({ bundle, bodyArea, locale, profile, onExit, onContin
 
         <ol className="gf-ex-list">
           {outcome.exercises.map((e) => (
-            <li key={e.id} className="gf-ex">
-              <h3>{e.name[locale]}</h3>
-              <p className="gf-ex-purpose">{e.purpose[locale]}</p>
-              <div className="gf-ex-media" aria-hidden>
-                <span>▶</span>
-              </div>
-              <h4>{t.steps}</h4>
-              <ol className="gf-ex-steps">
-                {e.steps.map((s, i) => (
-                  <li key={i}>{s[locale]}</li>
-                ))}
-              </ol>
-              <p className="gf-ex-dosage">
-                <strong>{t.dosage}:</strong> {e.dosage[locale]}
-              </p>
-              <p className="gf-ex-safety">
-                <strong>{t.safety}:</strong> {e.safety[locale]}
-              </p>
-              {e.reviewedBy === PLACEHOLDER_SIGNATURE && <p className="gf-demo">{t.demo}</p>}
+            <li key={e.id}>
+              <ExerciseCard exercise={e} locale={locale} />
             </li>
           ))}
         </ol>
 
-        <div className="gf-actions">
+        <div className="gf-actions sticky-cta">
           {onContinueToSession && (
             <button className="gf-btn gf-btn-primary" onClick={onContinueToSession}>
               {locale === 'ar' ? 'ابدأ الجلسة' : 'Start this session'}
