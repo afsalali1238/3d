@@ -1,7 +1,7 @@
 flag_id,prompt_en,prompt_ar,positive_key,message_id,order,status,reviewed_by,reviewed_on
-rf_trauma,"Did this start after a fall, a collision, or another significant impact?",هل بدأ هذا بعد سقوط أو اصطدام أو تأثير قوي؟,yes,esc_see_someone,1,published,PLACEHOLDER,2026-09-06
-rf_neuro,"Are you noticing new numbness, tingling that is spreading, or weakness in an arm or a leg?",هل تلاحظ خدراً جديداً أو تنميلاً منتشراً أو ضعفاً في ذراع أو ساق؟,yes,esc_see_someone,2,published,PLACEHOLDER,2026-09-06
-rf_night,Does pain wake you at night and stay with you even after you change position?,هل يوقظك الألم ليلاً ويبقى حتى بعد تغيير وضعيتك؟,yes,esc_see_someone,3,published,PLACEHOLDER,2026-09-06
-rf_bladder,Have you noticed a change in bladder or bowel control that is new for you?,هل لاحظت تغيراً جديداً في التحكم بالمثانة أو الأمعاء؟,yes,esc_see_someone,4,published,PLACEHOLDER,2026-09-06
-rf_weight,"Have you lost weight without trying, alongside this pain?",هل فقدت وزناً دون محاولة، مع هذا الألم؟,yes,esc_see_someone,5,published,PLACEHOLDER,2026-09-06
-rf_chest,"Do you get chest tightness, unusual breathlessness, or arm pain with effort?",هل تشعر بضيق في الصدر أو ضيق نفس غير معتاد أو ألم في الذراع مع الجهد؟,yes,esc_see_someone,6,published,PLACEHOLDER,2026-09-06
+rf_trauma,"Did this start after a fall, a collision, or another significant impact?",هل بدأ هذا بعد سقوط أو اصطدام أو تأثير قوي؟,yes,esc_see_someone,1,draft,PLACEHOLDER,2026-09-06
+rf_neuro,"Are you noticing new numbness, tingling that is spreading, or weakness in an arm or a leg?",هل تلاحظ خدراً جديداً أو تنميلاً منتشراً أو ضعفاً في ذراع أو ساق؟,yes,esc_see_someone,2,draft,PLACEHOLDER,2026-09-06
+rf_night,Does pain wake you at night and stay with you even after you change position?,هل يوقظك الألم ليلاً ويبقى حتى بعد تغيير وضعيتك؟,yes,esc_see_someone,3,draft,PLACEHOLDER,2026-09-06
+rf_bladder,Have you noticed a change in bladder or bowel control that is new for you?,هل لاحظت تغيراً جديداً في التحكم بالمثانة أو الأمعاء؟,yes,esc_see_someone,4,draft,PLACEHOLDER,2026-09-06
+rf_weight,"Have you lost weight without trying, alongside this pain?",هل فقدت وزناً دون محاولة، مع هذا الألم؟,yes,esc_see_someone,5,draft,PLACEHOLDER,2026-09-06
+rf_chest,"Do you get chest tightness, unusual breathlessness, or arm pain with effort?",هل تشعر بضيق في الصدر أو ضيق نفس غير معتاد أو ألم في الذراع مع الجهد؟,yes,esc_see_someone,6,draft,PLACEHOLDER,2026-09-06

@@ -1,142 +1,109 @@
 /**
- * Patient journey — the ten-step flow. This file is a renderer.
- * Clinical rules live in CSV + the safety engines.
+ * Minimal patient journey.
+ *
+ * welcome → intake (5 fields) → tap the body → exercises.
+ *
+ * The 3D BodyViewer internals are untouched. The long questionnaires
+ * (red-flag, precaution, onset, movement / timing screens) are not part of
+ * this flow; their content rows are currently draft in content/*.csv.
  */
 import { useCallback, useMemo, useState } from 'react';
 import BodyViewerLazy from '../body/BodyViewerLazy';
 import RegionSearch from '../search/RegionSearch';
-import GuidedFlow from '../guided/GuidedFlow';
-import ProfileGate from '../guided/ProfileGate';
-import NrsSlider from '../symptom/NrsSlider';
+import ExerciseCard from '../exercise/ExerciseCard';
+import IntakeForm from './Intake';
 import { CONTENT } from '../../content/bundle.gen';
-import { areaForRegion, questionsFor, resolveOutcome, type Answers, type Profile } from '../../content/routing';
+import { areaForRegion, resolveOutcome } from '../../content/routing';
 import { loadConsent, saveConsent } from '../../privacy/consent';
 import { clearAllPatientData, type PersistMode } from '../../privacy/storage';
-import { evaluateRedFlags, publishedRedFlags } from '../../safety/redFlags';
-import { evaluatePrecautions, publishedPrecautions, applyPrecautionHide } from '../../safety/precautions';
-import { evaluateEscalationRules, thresholdValue } from '../../safety/escalationRules';
-import { startEpisode, loadEpisode, appendSession } from '../../episode/store';
-import { resolveTrafficLight } from '../../episode/trafficLight';
-import ExerciseCard from '../exercise/ExerciseCard';
+import { loadIntake, saveIntake, clearIntake, type Intake } from '../../privacy/intake';
 import { GROUP_LABELS, REGIONS, regionLabel } from '../body/regions';
 import type { BodyView, Gender, Locale, ViewerMode } from '../body/types';
-import type { Irritability } from '../../content/types';
+
 import '../../app.css';
 import '../guided/guided.css';
 import './journey.css';
 
-type Step =
-  | 'welcome'
-  | 'red_flags'
-  | 'precautions'
-  | 'about'
-  | 'body'
-  | 'symptoms'
-  | 'area_qs'
-  | 'results'
-  | 'session'
-  | 'check'
-  | 'progress'
-  | 'stopped';
+type Step = 'welcome' | 'intake' | 'body' | 'results';
 
 const COPY = {
   en: {
     app: 'Home programme',
-    notAdvice: 'This follows your physiotherapist’s programme. It does not tell you what is wrong.',
-    consentTitle: 'Before we start',
-    consentBody:
-      'We will ask a few questions about how you feel. Answers stay on this device. Nothing is sent anywhere. No account. You can clear everything in one tap.',
+    notAdvice: 'Follows your physiotherapist’s programme.',
+    welcomeTitle: 'Find your exercises',
+    welcomeBody: 'Just a few quick details, then you tap where it hurts.',
+    consentBody: 'Your answers stay on this device. Nothing is sent anywhere. No account.',
     notMine: 'This is not my device — keep answers for this visit only',
-    agree: 'I understand — continue',
-    yes: 'Yes',
-    no: 'No',
-    rfTitle: 'A few safety questions first',
-    rfSub: 'Please answer all of these. If something here applies, we will stop and ask you to speak to a physiotherapist rather than suggest exercises.',
-    precTitle: 'Anything we should know before you move?',
-    precSub: 'Pick any that apply. This is a safety check, not a diagnosis.',
+    start: 'Continue',
     continue: 'Continue',
-    nrsNow: 'How intense is it right now? (0–10)',
-    nrsWorst: 'At worst this week? (optional)',
-    startSession: 'Start this session',
-    doneSession: 'I have finished',
-    checkTitle: 'How does it feel now?',
-    print: 'Print a summary for your visit',
+    back: 'Back',
+    results: 'Your exercises',
+    empty: 'There is nothing published for this area yet.',
+    unrouted: 'Here is everything published for this area.',
+    tapBody: 'Tap where it is on the body',
+    front: 'Front',
+    backView: 'Back',
+    male: 'Male',
+    female: 'Female',
+    list: 'List',
     clear: 'Clear my data',
-    contact: 'Contact the clinic',
-    stopped: 'We are not going to guess.',
-    browse: 'Browse the body map',
     text: 'Text size',
-    green: 'Unchanged or eased — continue as shown.',
-    amber: 'A little more than before — ease back and hold progression.',
-    red: 'Stop this exercise and speak to a physiotherapist.',
-    noColour: 'We cannot classify this change until the clinic has set a threshold.',
-    unrouted: 'Here is everything published for this area. If this does not fit, talk to the clinic — we will not guess.',
-    missingRf: 'The safety screen is not ready. Please contact the clinic rather than using exercises.',
+    map: 'Body map',
+    startAgain: 'Start again',
+    close: 'Close',
+    chooseRegion: 'Choose a region',
+    session: 'Exercise',
   },
   ar: {
     app: 'البرنامج المنزلي',
-    notAdvice: 'هذا يتبع برنامج أخصائي العلاج الطبيعي. لا يخبرك ما المشكلة.',
-    consentTitle: 'قبل أن نبدأ',
-    consentBody:
-      'سنطرح بعض الأسئلة عن شعورك. الإجابات تبقى على هذا الجهاز. لا يُرسل شيء. لا حساب. يمكنك مسح كل شيء بضغطة واحدة.',
+    notAdvice: 'يتبع برنامج أخصائي العلاج الطبيعي.',
+    welcomeTitle: 'ابحث عن تمارينك',
+    welcomeBody: 'القليل من التفاصيل السريعة، ثم تضغط على مكان الألم.',
+    consentBody: 'إجاباتك تبقى على هذا الجهاز. لا يُرسل شيء. لا حساب.',
     notMine: 'هذا ليس جهازي — احتفظ بالإجابات لهذه الزيارة فقط',
-    agree: 'فهمت — متابعة',
-    yes: 'نعم',
-    no: 'لا',
-    rfTitle: 'أسئلة سلامة أولاً',
-    rfSub: 'أجب عن جميع هذه الأسئلة. إذا انطبق شيء منها، سنتوقف ونطلب منك مراجعة أخصائي بدلاً من اقتراح تمارين.',
-    precTitle: 'أي شيء ينبغي معرفته قبل الحركة؟',
-    precSub: 'اختر ما ينطبق. هذا فحص سلامة وليس تشخيصاً.',
+    start: 'متابعة',
     continue: 'متابعة',
-    nrsNow: 'ما شدة الإحساس الآن؟ (٠–١٠)',
-    nrsWorst: 'في أسوأ لحظة هذا الأسبوع؟ (اختياري)',
-    startSession: 'ابدأ هذه الجلسة',
-    doneSession: 'انتهيت',
-    checkTitle: 'كيف تشعر الآن؟',
-    print: 'اطبع ملخصاً للموعد',
+    back: 'رجوع',
+    results: 'تمارينك',
+    empty: 'لا يوجد محتوى منشور لهذه المنطقة بعد.',
+    unrouted: 'إليك جميع التمارين المنشورة لهذه المنطقة.',
+    tapBody: 'اضغط على المكان في الجسم',
+    front: 'أمامي',
+    backView: 'خلفي',
+    male: 'ذكر',
+    female: 'أنثى',
+    list: 'قائمة',
     clear: 'امسح بياناتي',
-    contact: 'تواصل مع العيادة',
-    stopped: 'لن نخمّن.',
-    browse: 'خريطة الجسم',
     text: 'حجم النص',
-    green: 'لم يتغير أو خف — تابع كما هو.',
-    amber: 'زيادة خفيفة — خفّف وتوقف عن التقدم.',
-    red: 'أوقف هذا التمرين وتحدث مع أخصائي علاج طبيعي.',
-    noColour: 'لا يمكننا تصنيف هذا التغير حتى تحدد العيادة العتبة.',
-    unrouted: 'إليك كل ما هو منشور لهذه المنطقة. إن لم يناسبك، تواصل مع العيادة — لن نخمّن.',
-    missingRf: 'شاشة السلامة غير جاهزة. يرجى التواصل مع العيادة بدلاً من استخدام التمارين.',
+    map: 'خريطة الجسم',
+    startAgain: 'ابدأ من جديد',
+    close: 'إغلاق',
+    chooseRegion: 'اختر منطقة',
+    session: 'تمرين',
   },
 } as const;
 
 export default function Journey() {
   const [locale, setLocale] = useState<Locale>('en');
   const [textSize, setTextSize] = useState(1);
-  const [step, setStep] = useState<Step>(() => (loadConsent() ? 'red_flags' : 'welcome'));
+
+  const [step, setStep] = useState<Step>(() => {
+    const consent = loadConsent();
+    if (!consent) return 'welcome';
+    return loadIntake() ? 'body' : 'intake';
+  });
+
   const [notMine, setNotMine] = useState(false);
-  const [rfAnswers, setRfAnswers] = useState<Record<string, string>>({});
-  const [precKeys, setPrecKeys] = useState<string[]>([]);
-  const [profile, setProfile] = useState<Profile>({});
-  const [gender, setGender] = useState<Gender>('male');
+  const [intake, setIntake] = useState<Intake | null>(() => loadIntake());
+  const [gender, setGender] = useState<Gender>(() => intake?.sex ?? 'male');
   const [view, setView] = useState<BodyView>('anterior');
   const [mode, setMode] = useState<ViewerMode>('select');
   const [selectedRegionId, setSelectedRegionId] = useState<string | null>(null);
   const [showList, setShowList] = useState(false);
-  const [resetSignal, setResetSignal] = useState(0);
   const [bodyArea, setBodyArea] = useState<string | null>(null);
-  const [globalAnswers, setGlobalAnswers] = useState<Answers>({});
-  const [globalStep, setGlobalStep] = useState(0);
-  const [nrsNow, setNrsNow] = useState(3);
-  const [nrsWorst, setNrsWorst] = useState<number | null>(null);
-  const [nrsAfter, setNrsAfter] = useState(3);
-  const [stopMessageId, setStopMessageId] = useState<string | null>(null);
-  const [sessionExIds, setSessionExIds] = useState<string[]>([]);
-  const [rfIndex, setRfIndex] = useState(0);
 
   const t = COPY[locale];
   const isRtl = locale === 'ar';
-  const flags = publishedRedFlags(CONTENT);
-  const precs = publishedPrecautions(CONTENT);
-  const globalQs = useMemo(() => questionsFor(CONTENT, 'global'), []);
 
   const groups = useMemo(() => {
     const out: Record<string, typeof REGIONS> = {};
@@ -144,21 +111,28 @@ export default function Journey() {
     return out;
   }, []);
 
-  const stopWith = (messageId: string) => {
-    setStopMessageId(messageId);
-    setStep('stopped');
-  };
+  const outcome = useMemo(() => {
+    if (!bodyArea || !intake) return null;
+    return resolveOutcome(CONTENT, bodyArea, {}, { sex: intake.sex });
+  }, [bodyArea, intake]);
+
+  const exercises = useMemo(
+    () => (outcome?.kind === 'exercises' ? outcome.exercises : []),
+    [outcome],
+  );
 
   const handleConsent = () => {
-    const mode: PersistMode = notMine ? 'session' : 'device';
-    saveConsent(locale, mode);
-    setStep('red_flags');
+    const persistMode: PersistMode = notMine ? 'session' : 'device';
+    saveConsent(locale, persistMode);
+    setStep('intake');
   };
 
-  const finishPrecautions = () => {
-    const ev = evaluatePrecautions(CONTENT, precKeys);
-    if (ev.kind === 'stop') stopWith(ev.messageId);
-    else setStep('about');
+  const handleIntake = (input: Omit<Intake, 'savedAt'>) => {
+    saveIntake(input);
+    const next: Intake = { ...input, savedAt: new Date().toISOString() };
+    setIntake(next);
+    setGender(input.sex);
+    setStep('body');
   };
 
   const pickRegion = useCallback((id: string) => {
@@ -168,46 +142,22 @@ export default function Journey() {
     setMode('pinpoint');
   }, []);
 
-  const goSymptoms = () => {
+  const goResults = () => {
     if (!bodyArea) return;
-    setStep('symptoms');
+    setStep('results');
   };
 
-  const finishGlobal = () => {
-    const irr = globalAnswers.irritability as Irritability | undefined;
-    if (irr === 'quick' || irr === 'hours' || irr === 'day') {
-      setProfile((p) => ({ ...p, irritability: irr }));
-    }
-    const nrsRef = thresholdValue(CONTENT, 'nrs_referral');
-    if (nrsRef != null && nrsNow >= nrsRef) {
-      const msg = CONTENT.escalations.find((m) => m.status === 'published');
-      if (msg) {
-        stopWith(msg.id);
-        return;
-      }
-    }
-    setStep('area_qs');
+  const clear = () => {
+    clearAllPatientData();
+    clearIntake();
+    setIntake(null);
+    setSelectedRegionId(null);
+    setBodyArea(null);
+    setGender('male');
+    setMode('select');
+    setView('anterior');
+    setStep('welcome');
   };
-
-  const outcome = useMemo(() => {
-    if (!bodyArea) return null;
-    return resolveOutcome(CONTENT, bodyArea, { ...globalAnswers }, profile);
-  }, [bodyArea, globalAnswers, profile]);
-
-  const shownExercises = useMemo(() => {
-    if (!outcome || outcome.kind !== 'exercises') return [];
-    const prec = evaluatePrecautions(CONTENT, precKeys);
-    if (prec.kind !== 'ok') return [];
-    return applyPrecautionHide(outcome.exercises, prec.hideIds);
-  }, [outcome, precKeys]);
-
-  const light = resolveTrafficLight(CONTENT, nrsNow, nrsAfter);
-  const esc = evaluateEscalationRules(CONTENT, loadEpisode(), {
-    unrouted: outcome?.kind === 'exercises' && outcome.unrouted,
-    nrsNow,
-  });
-
-  const msg = stopMessageId ? CONTENT.escalations.find((m) => m.id === stopMessageId) : null;
 
   return (
     <div className="app journey" dir={isRtl ? 'rtl' : 'ltr'} style={{ fontSize: `${17 * textSize}px` }}>
@@ -231,13 +181,7 @@ export default function Journey() {
               onChange={(e) => setTextSize(Number(e.target.value))}
             />
           </label>
-          <button
-            className="ghost"
-            onClick={() => {
-              clearAllPatientData();
-              setStep('welcome');
-            }}
-          >
+          <button className="ghost" onClick={clear}>
             {t.clear}
           </button>
         </div>
@@ -247,113 +191,23 @@ export default function Journey() {
         {step === 'welcome' && (
           <section className="gf hero">
             <p className="hero-kicker">{t.app}</p>
-            <h2>{t.consentTitle}</h2>
+            <h2>{t.welcomeTitle}</h2>
+            <p className="gf-hint">{t.welcomeBody}</p>
             <p className="gf-hint">{t.consentBody}</p>
-            <p className="gf-hint">{t.notAdvice}</p>
             <label className="privacy-row">
               <input type="checkbox" checked={notMine} onChange={(e) => setNotMine(e.target.checked)} />
               <span>{t.notMine}</span>
             </label>
             <div className="gf-actions sticky-cta">
               <button className="gf-btn gf-btn-primary" onClick={handleConsent}>
-                {t.agree}
+                {t.start}
               </button>
             </div>
           </section>
         )}
 
-        {step === 'red_flags' && flags[rfIndex] && (
-          <section className="gf rf-card">
-            <div className="step-dots" aria-hidden>
-              {flags.map((f, i) => (
-                <i key={f.id} className={i === rfIndex ? 'on' : ''} />
-              ))}
-            </div>
-            <p className="rf-count">
-              {rfIndex + 1} / {flags.length}
-            </p>
-            <h2 className="gf-prompt">{flags[rfIndex].prompt[locale]}</h2>
-            <div className="yn">
-              <button
-                className="gf-btn yn-no"
-                onClick={() => {
-                  const f = flags[rfIndex];
-                  const next = { ...rfAnswers, [f.id]: 'no' };
-                  setRfAnswers(next);
-                  if (rfIndex + 1 < flags.length) setRfIndex(rfIndex + 1);
-                  else {
-                    const ev = evaluateRedFlags(CONTENT, next);
-                    if (ev.stopped) stopWith(ev.messageId);
-                    else setStep('precautions');
-                  }
-                }}
-              >
-                {t.no}
-              </button>
-              <button
-                className="gf-btn yn-yes"
-                onClick={() => {
-                  const f = flags[rfIndex];
-                  const next = { ...rfAnswers, [f.id]: f.positiveKey };
-                  setRfAnswers(next);
-                  if (rfIndex + 1 < flags.length) setRfIndex(rfIndex + 1);
-                  else {
-                    const ev = evaluateRedFlags(CONTENT, next);
-                    if (ev.stopped) stopWith(ev.messageId);
-                    else setStep('precautions');
-                  }
-                }}
-              >
-                {t.yes}
-              </button>
-            </div>
-          </section>
-        )}
-
-        {step === 'precautions' && (
-          <section className="gf">
-            <h2>{t.precTitle}</h2>
-            <p className="gf-hint">{t.precSub}</p>
-            <div className="prec-list">
-              {precs.map((p) => {
-                const on = precKeys.includes(p.conditionKey);
-                return (
-                  <button
-                    key={p.conditionKey}
-                    className={`prec-item${on ? ' on' : ''}`}
-                    onClick={() => {
-                      if (p.conditionKey === 'none' || p.conditionKey === 'prefer_not_to_say') {
-                        setPrecKeys([p.conditionKey]);
-                        return;
-                      }
-                      setPrecKeys((keys) => {
-                        const next = keys.filter((k) => k !== 'none' && k !== 'prefer_not_to_say');
-                        return on ? next.filter((k) => k !== p.conditionKey) : [...next, p.conditionKey];
-                      });
-                    }}
-                  >
-                    {p.label[locale]}
-                  </button>
-                );
-              })}
-            </div>
-            <div className="gf-actions sticky-cta">
-              <button className="gf-btn gf-btn-primary" disabled={precKeys.length === 0} onClick={finishPrecautions}>
-                {t.continue}
-              </button>
-            </div>
-          </section>
-        )}
-
-        {step === 'about' && (
-          <ProfileGate
-            locale={locale}
-            onDone={(p) => {
-              setProfile(p);
-              if (p.sex) setGender(p.sex);
-              setStep('body');
-            }}
-          />
+        {step === 'intake' && (
+          <IntakeForm locale={locale} initial={intake} onDone={handleIntake} />
         )}
 
         {step === 'body' && (
@@ -366,7 +220,6 @@ export default function Journey() {
                 locale={locale}
                 selectedRegionId={selectedRegionId}
                 pins={[]}
-                resetSignal={resetSignal}
                 onRegionHover={() => {}}
                 onRegionSelect={pickRegion}
                 onRegionClear={() => setSelectedRegionId(null)}
@@ -378,22 +231,22 @@ export default function Journey() {
               <div className="map-dock">
                 <div className="seg">
                   <button className={view === 'anterior' ? 'on' : ''} onClick={() => setView('anterior')}>
-                    {locale === 'ar' ? 'أمامي' : 'Front'}
+                    {t.front}
                   </button>
                   <button className={view === 'posterior' ? 'on' : ''} onClick={() => setView('posterior')}>
-                    {locale === 'ar' ? 'خلفي' : 'Back'}
+                    {t.backView}
                   </button>
                 </div>
                 <div className="seg">
                   <button className={gender === 'male' ? 'on' : ''} onClick={() => setGender('male')}>
-                    {locale === 'ar' ? 'ذكر' : 'Male'}
+                    {t.male}
                   </button>
                   <button className={gender === 'female' ? 'on' : ''} onClick={() => setGender('female')}>
-                    {locale === 'ar' ? 'أنثى' : 'Female'}
+                    {t.female}
                   </button>
                 </div>
                 <button className="ghost" onClick={() => setShowList(true)}>
-                  {locale === 'ar' ? 'قائمة' : 'List'}
+                  {t.list}
                 </button>
               </div>
             </div>
@@ -401,12 +254,10 @@ export default function Journey() {
               <p className="map-hint">
                 {selectedRegionId
                   ? regionLabel(selectedRegionId, locale)
-                  : locale === 'ar'
-                    ? 'اضغط على المكان في الجسم'
-                    : 'Tap where it is on the body'}
+                  : t.tapBody}
               </p>
               {bodyArea && (
-                <button className="gf-btn gf-btn-primary body-cta" onClick={goSymptoms}>
+                <button className="gf-btn gf-btn-primary body-cta" onClick={goResults}>
                   {t.continue}
                 </button>
               )}
@@ -414,187 +265,33 @@ export default function Journey() {
           </div>
         )}
 
-        {step === 'symptoms' && (
+        {step === 'results' && bodyArea && (
           <section className="gf">
-            <NrsSlider locale={locale} value={nrsNow} onChange={setNrsNow} label={t.nrsNow} />
-            <NrsSlider
-              locale={locale}
-              value={nrsWorst ?? nrsNow}
-              onChange={(n) => setNrsWorst(n)}
-              label={t.nrsWorst}
-            />
-            {globalQs[globalStep] ? (
-              <>
-                <h2 className="gf-prompt">{globalQs[globalStep].prompt[locale]}</h2>
-                <ul className="gf-opts">
-                  {globalQs[globalStep].options.map((o) => (
-                    <li key={o.id}>
-                      <button
-                        className="gf-opt"
-                        onClick={() => {
-                          setGlobalAnswers((a) => ({ ...a, [globalQs[globalStep].key]: o.key }));
-                          setGlobalStep((s) => s + 1);
-                        }}
-                      >
-                        {o.label[locale]}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-                {globalQs[globalStep].skippable && (
-                  <button className="gf-btn gf-btn-quiet" onClick={() => setGlobalStep((s) => s + 1)}>
-                    {locale === 'ar' ? 'تخطي' : 'Skip'}
-                  </button>
-                )}
-              </>
-            ) : (
-              <div className="gf-actions">
-                <button className="gf-btn gf-btn-primary" onClick={finishGlobal}>
-                  {t.continue}
-                </button>
-              </div>
-            )}
-          </section>
-        )}
+            <header className="gf-results-head">
+              <h2>{t.results}</h2>
+              <span className="gf-area">
+                {CONTENT.bodyAreas.find((a) => a.id === bodyArea)?.label[locale] ?? bodyArea}
+              </span>
+            </header>
 
-        {step === 'area_qs' && bodyArea && (
-          <GuidedFlow
-            bundle={CONTENT}
-            bodyArea={bodyArea}
-            locale={locale}
-            profile={profile}
-            onExit={() => setStep('body')}
-            onContinueToSession={() => {
-              startEpisode({
-                bodyArea,
-                regionId: selectedRegionId ?? undefined,
-                answers: globalAnswers,
-                nrsNow,
-              });
-              setSessionExIds(shownExercises.map((e) => e.id));
-              setStep('session');
-            }}
-          />
-        )}
-
-        {step === 'results' && (
-          <section className="gf">
-            <h2>{locale === 'ar' ? 'تمارينك' : 'Your exercises'}</h2>
+            {outcome?.kind === 'empty' && <p className="gf-note">{t.empty}</p>}
             {outcome?.kind === 'exercises' && outcome.unrouted && <p className="gf-note">{t.unrouted}</p>}
-            {esc?.reason === 'unrouted' && <p className="gf-note">{t.stopped}</p>}
+
             <ol className="gf-ex-list">
-              {shownExercises.map((e) => (
+              {exercises.map((e) => (
                 <li key={e.id}>
                   <ExerciseCard exercise={e} locale={locale} />
                 </li>
               ))}
             </ol>
+
             <div className="gf-actions">
-              <button
-                className="gf-btn gf-btn-primary"
-                onClick={() => {
-                  if (bodyArea) {
-                    startEpisode({
-                      bodyArea,
-                      regionId: selectedRegionId ?? undefined,
-                      answers: globalAnswers,
-                      nrsNow,
-                    });
-                    setSessionExIds(shownExercises.map((e) => e.id));
-                  }
-                  setStep('session');
-                }}
-                disabled={shownExercises.length === 0}
-              >
-                {t.startSession}
+              <button className="gf-btn gf-btn-primary" onClick={() => setStep('body')}>
+                {t.back}
               </button>
-              <button className="gf-btn" onClick={() => window.print()}>
-                {t.print}
+              <button className="gf-btn" onClick={clear}>
+                {t.startAgain}
               </button>
-            </div>
-          </section>
-        )}
-
-        {step === 'session' && (
-          <section className="gf">
-            <h2>{t.startSession}</h2>
-            <ol className="gf-ex-list">
-              {shownExercises
-                .filter((e) => sessionExIds.includes(e.id))
-                .map((e) => (
-                  <li key={e.id}>
-                    <ExerciseCard exercise={e} locale={locale} session />
-                  </li>
-                ))}
-            </ol>
-            <div className="sticky-cta">
-              <button className="gf-btn gf-btn-primary" onClick={() => setStep('check')}>
-                {t.doneSession}
-              </button>
-            </div>
-          </section>
-        )}
-
-        {step === 'check' && (
-          <section className="gf">
-            <h2>{t.checkTitle}</h2>
-            <NrsSlider locale={locale} value={nrsAfter} onChange={setNrsAfter} label={t.nrsNow} />
-            <p className="gf-note">
-              {light === 'green' ? t.green : light === 'amber' ? t.amber : light === 'red' ? t.red : t.noColour}
-            </p>
-            <div className="gf-actions">
-              <button
-                className="gf-btn gf-btn-primary"
-                onClick={() => {
-                  if (bodyArea) {
-                    appendSession({
-                      at: new Date().toISOString(),
-                      bodyArea,
-                      exerciseIds: sessionExIds,
-                      nrsBefore: nrsNow,
-                      nrsAfter,
-                      light: light ?? undefined,
-                    });
-                  }
-                  if (light === 'red') {
-                    const m = CONTENT.escalations[0];
-                    if (m) stopWith(m.id);
-                    else setStep('progress');
-                  } else setStep('progress');
-                }}
-              >
-                {t.continue}
-              </button>
-            </div>
-          </section>
-        )}
-
-        {step === 'progress' && (
-          <section className="gf visit-summary">
-            <h2>{t.print}</h2>
-            <p>
-              {locale === 'ar' ? 'المنطقة' : 'Area'}: {bodyArea}
-            </p>
-            <p>NRS: {nrsNow} → {nrsAfter}</p>
-            <p>
-              {locale === 'ar' ? 'التمارين' : 'Tried'}: {sessionExIds.join(', ')}
-            </p>
-            {esc && <p className="gf-note">{t.contact}</p>}
-            <div className="gf-actions">
-              <button className="gf-btn" onClick={() => window.print()}>
-                {t.print}
-              </button>
-              <button className="gf-btn">{t.contact}</button>
-            </div>
-          </section>
-        )}
-
-        {step === 'stopped' && (
-          <section className="gf gf-escalate" role="alert">
-            <h2>{msg?.title[locale] ?? t.stopped}</h2>
-            <p>{msg?.body[locale] ?? t.missingRf}</p>
-            <div className="gf-actions sticky-cta">
-              <button className="gf-btn gf-btn-primary">{t.contact}</button>
             </div>
           </section>
         )}
@@ -604,9 +301,9 @@ export default function Journey() {
         <div className="sheet-backdrop" onClick={() => setShowList(false)}>
           <div className="sheet" onClick={(e) => e.stopPropagation()} role="dialog">
             <div className="sheet-head">
-              <h2>{locale === 'ar' ? 'اختر منطقة' : 'Choose a region'}</h2>
+              <h2>{t.chooseRegion}</h2>
               <button className="ghost" onClick={() => setShowList(false)}>
-                {locale === 'ar' ? 'إغلاق' : 'Close'}
+                {t.close}
               </button>
             </div>
             <div className="sheet-body">

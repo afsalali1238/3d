@@ -131,7 +131,7 @@ export const CONTENT: ContentBundle = {
       ],
       "order": 1,
       "skippable": true,
-      "status": "published",
+      "status": "draft",
       "reviewedBy": "PLACEHOLDER",
       "reviewedOn": "2026-09-06"
     },
@@ -163,7 +163,7 @@ export const CONTENT: ContentBundle = {
       ],
       "order": 1,
       "skippable": false,
-      "status": "published",
+      "status": "draft",
       "reviewedBy": "PLACEHOLDER",
       "reviewedOn": "2026-09-06"
     },
@@ -203,7 +203,7 @@ export const CONTENT: ContentBundle = {
       ],
       "order": 2,
       "skippable": true,
-      "status": "published",
+      "status": "draft",
       "reviewedBy": "PLACEHOLDER",
       "reviewedOn": "2026-09-06"
     },
@@ -243,7 +243,7 @@ export const CONTENT: ContentBundle = {
       ],
       "order": 3,
       "skippable": false,
-      "status": "published",
+      "status": "draft",
       "reviewedBy": "PLACEHOLDER",
       "reviewedOn": "2026-09-06"
     },
@@ -283,7 +283,7 @@ export const CONTENT: ContentBundle = {
       ],
       "order": 4,
       "skippable": true,
-      "status": "published",
+      "status": "draft",
       "reviewedBy": "PLACEHOLDER",
       "reviewedOn": "2026-09-06"
     },
@@ -323,7 +323,7 @@ export const CONTENT: ContentBundle = {
       ],
       "order": 1,
       "skippable": true,
-      "status": "published",
+      "status": "draft",
       "reviewedBy": "PLACEHOLDER",
       "reviewedOn": "2026-09-06"
     },
@@ -373,7 +373,7 @@ export const CONTENT: ContentBundle = {
       ],
       "order": 2,
       "skippable": true,
-      "status": "published",
+      "status": "draft",
       "reviewedBy": "PLACEHOLDER",
       "reviewedOn": "2026-09-06"
     }
@@ -837,7 +837,7 @@ export const CONTENT: ContentBundle = {
       "positiveKey": "yes",
       "messageId": "esc_see_someone",
       "order": 1,
-      "status": "published",
+      "status": "draft",
       "reviewedBy": "PLACEHOLDER",
       "reviewedOn": "2026-09-06"
     },
@@ -850,7 +850,7 @@ export const CONTENT: ContentBundle = {
       "positiveKey": "yes",
       "messageId": "esc_see_someone",
       "order": 2,
-      "status": "published",
+      "status": "draft",
       "reviewedBy": "PLACEHOLDER",
       "reviewedOn": "2026-09-06"
     },
@@ -863,7 +863,7 @@ export const CONTENT: ContentBundle = {
       "positiveKey": "yes",
       "messageId": "esc_see_someone",
       "order": 3,
-      "status": "published",
+      "status": "draft",
       "reviewedBy": "PLACEHOLDER",
       "reviewedOn": "2026-09-06"
     },
@@ -876,7 +876,7 @@ export const CONTENT: ContentBundle = {
       "positiveKey": "yes",
       "messageId": "esc_see_someone",
       "order": 4,
-      "status": "published",
+      "status": "draft",
       "reviewedBy": "PLACEHOLDER",
       "reviewedOn": "2026-09-06"
     },
@@ -889,7 +889,7 @@ export const CONTENT: ContentBundle = {
       "positiveKey": "yes",
       "messageId": "esc_see_someone",
       "order": 5,
-      "status": "published",
+      "status": "draft",
       "reviewedBy": "PLACEHOLDER",
       "reviewedOn": "2026-09-06"
     },
@@ -902,7 +902,7 @@ export const CONTENT: ContentBundle = {
       "positiveKey": "yes",
       "messageId": "esc_see_someone",
       "order": 6,
-      "status": "published",
+      "status": "draft",
       "reviewedBy": "PLACEHOLDER",
       "reviewedOn": "2026-09-06"
     }
@@ -918,7 +918,7 @@ export const CONTENT: ContentBundle = {
       "restrictsIds": [],
       "action": "warn",
       "messageId": "esc_see_someone",
-      "status": "published",
+      "status": "draft",
       "reviewedBy": "PLACEHOLDER",
       "reviewedOn": "2026-09-06"
     },
@@ -932,7 +932,7 @@ export const CONTENT: ContentBundle = {
       "restrictsIds": [],
       "action": "warn",
       "messageId": "esc_see_someone",
-      "status": "published",
+      "status": "draft",
       "reviewedBy": "PLACEHOLDER",
       "reviewedOn": "2026-09-06"
     },
@@ -946,7 +946,7 @@ export const CONTENT: ContentBundle = {
       "restrictsIds": [],
       "action": "stop_and_refer",
       "messageId": "esc_see_someone",
-      "status": "published",
+      "status": "draft",
       "reviewedBy": "PLACEHOLDER",
       "reviewedOn": "2026-09-06"
     },
@@ -962,7 +962,7 @@ export const CONTENT: ContentBundle = {
       ],
       "action": "hide",
       "messageId": "esc_see_someone",
-      "status": "published",
+      "status": "draft",
       "reviewedBy": "PLACEHOLDER",
       "reviewedOn": "2026-09-06"
     },
@@ -976,7 +976,7 @@ export const CONTENT: ContentBundle = {
       "restrictsIds": [],
       "action": "stop_and_refer",
       "messageId": "esc_see_someone",
-      "status": "published",
+      "status": "draft",
       "reviewedBy": "PLACEHOLDER",
       "reviewedOn": "2026-09-06"
     }

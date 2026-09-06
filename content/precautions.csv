@@ -1,6 +1,6 @@
 condition_key,label_en,label_ar,restricts_tags,restricts_ids,action,message_id,status,reviewed_by,reviewed_on
-none,None of these,لا شيء من هذا,,,warn,esc_see_someone,published,PLACEHOLDER,2026-09-06
-prefer_not_to_say,Prefer not to say,أفضل عدم الإفصاح,,,warn,esc_see_someone,published,PLACEHOLDER,2026-09-06
-recent_surgery,Recent surgery in the last 3 months,عملية جراحية خلال الأشهر الثلاثة الماضية,,,stop_and_refer,esc_see_someone,published,PLACEHOLDER,2026-09-06
-balance_concern,A balance problem that makes standing unaided unsafe,مشكلة في التوازن تجعل الوقوف دون مساعدة غير آمن,,lb_ex_sit_stand,hide,esc_see_someone,published,PLACEHOLDER,2026-09-06
-pregnancy_or_postpartum,Currently pregnant or within 6 weeks after birth,حامل حالياً أو خلال ستة أسابيع بعد الولادة,,,stop_and_refer,esc_see_someone,published,PLACEHOLDER,2026-09-06
+none,None of these,لا شيء من هذا,,,warn,esc_see_someone,draft,PLACEHOLDER,2026-09-06
+prefer_not_to_say,Prefer not to say,أفضل عدم الإفصاح,,,warn,esc_see_someone,draft,PLACEHOLDER,2026-09-06
+recent_surgery,Recent surgery in the last 3 months,عملية جراحية خلال الأشهر الثلاثة الماضية,,,stop_and_refer,esc_see_someone,draft,PLACEHOLDER,2026-09-06
+balance_concern,A balance problem that makes standing unaided unsafe,مشكلة في التوازن تجعل الوقوف دون مساعدة غير آمن,,lb_ex_sit_stand,hide,esc_see_someone,draft,PLACEHOLDER,2026-09-06
+pregnancy_or_postpartum,Currently pregnant or within 6 weeks after birth,حامل حالياً أو خلال ستة أسابيع بعد الولادة,,,stop_and_refer,esc_see_someone,draft,PLACEHOLDER,2026-09-06
