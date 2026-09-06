@@ -64,26 +64,36 @@
 }
 .mg-svg { width: 78px; height: 112px; }
 
-.mg-tilt .mg-spine { animation: tilt 2.2s ease-in-out infinite; transform-origin: 60px 86px; }
-.mg-fold .mg-leg { animation: fold 2.2s ease-in-out infinite; transform-origin: 52px 70px; }
-.mg-arch .mg-spine { animation: arch 2.4s ease-in-out infinite; transform-origin: 60px 58px; }
-.mg-rise .mg-body, .mg-rise .mg-head { animation: rise 2.6s ease-in-out infinite; }
-.mg-tuck .mg-head { animation: tuck 2s ease-in-out infinite; transform-origin: 60px 42px; }
-.mg-turn .mg-head { animation: turn 2.4s ease-in-out infinite; transform-origin: 60px 42px; }
-.mg-squeeze .mg-arms { animation: squeeze 1.8s ease-in-out infinite; transform-origin: 60px 50px; }
-.mg-lift .mg-hips { animation: lift 2.2s ease-in-out infinite; transform-origin: 50px 96px; }
-.mg-bend .mg-leg { animation: bend 2s ease-in-out infinite; transform-origin: 64px 70px; }
-.mg-circle .mg-foot { animation: orbit 2.4s linear infinite; transform-origin: 62px 92px; }
+/* Person faces LEFT. Signs match the joint. */
+.mg-tilt .mg-pelvis { animation: tilt 2.4s ease-in-out infinite; transform-origin: 62px 90px; }
+.mg-fold .mg-thigh { animation: fold 2.4s ease-in-out infinite; transform-origin: 58px 92px; }
+.mg-arch .mg-back { animation: arch 2.6s ease-in-out infinite; transform-origin: 60px 70px; }
+.mg-rise .mg-rise-g { animation: rise 2.6s ease-in-out infinite; transform-origin: 48px 112px; }
+.mg-tuck .mg-head-tuck { animation: tuck 2s ease-in-out infinite; }
+.mg-turn .mg-head-turn { animation: turn 2.6s ease-in-out infinite; transform-origin: 52px 42px; }
+.mg-squeeze .mg-scaps { animation: squeeze 2s ease-in-out infinite; transform-origin: 50px 48px; }
+.mg-lift .mg-hips { animation: lift 2.4s ease-in-out infinite; transform-origin: 70px 118px; }
+.mg-bend .mg-heel { animation: bend 2.2s ease-in-out infinite; transform-origin: 58px 70px; }
+.mg-circle .mg-foot { animation: orbit 2.2s linear infinite; transform-origin: 58px 90px; }
 
-@keyframes tilt { 0%,100% { transform: rotate(6deg); } 50% { transform: rotate(-8deg); } }
-@keyframes fold { 0%,100% { transform: rotate(8deg); } 50% { transform: rotate(-42deg); } }
-@keyframes arch { 0%,100% { transform: translateY(-6px) scaleY(0.92); } 50% { transform: translateY(8px) scaleY(1.12); } }
-@keyframes rise { 0%,100% { transform: translateY(18px); } 50% { transform: translateY(0); } }
-@keyframes tuck { 0%,100% { transform: translateX(4px); } 50% { transform: translateX(-6px); } }
-@keyframes turn { 0%,100% { transform: scaleX(1); } 50% { transform: scaleX(0.45) translateX(8px); } }
-@keyframes squeeze { 0%,100% { transform: scaleX(1.08); } 50% { transform: scaleX(0.86); } }
-@keyframes lift { 0%,100% { transform: translateY(10px); } 50% { transform: translateY(-8px); } }
-@keyframes bend { 0%,100% { transform: rotate(0); } 50% { transform: rotate(28deg); } }
+/* posterior pelvic tilt: tailbone tucks, low back toward floor */
+@keyframes tilt { 0%,100% { transform: rotate(8deg); } 50% { transform: rotate(-12deg); } }
+/* hip flexion: thigh swings toward the head (left) */
+@keyframes fold { 0%,100% { transform: rotate(8deg); } 50% { transform: rotate(-55deg); } }
+/* cat (back up) then camel (belly down) */
+@keyframes arch { 0%,100% { transform: translateY(-10px); } 50% { transform: translateY(10px); } }
+/* sit (down) to stand (up) */
+@keyframes rise { 0%,100% { transform: translateY(16px) scaleY(0.92); } 50% { transform: translateY(0) scaleY(1); } }
+/* chin slides BACK (right), never nods down */
+@keyframes tuck { 0%,100% { transform: translateX(-8px); } 50% { transform: translateX(7px); } }
+/* look ahead, then over the left shoulder */
+@keyframes turn { 0%,100% { transform: rotate(0); } 50% { transform: rotate(-42deg); } }
+/* blades back + slightly down, not a shrug */
+@keyframes squeeze { 0%,100% { transform: scaleX(1.12) translateY(-2px); } 50% { transform: scaleX(0.78) translateY(4px); } }
+/* hips lift off the mat */
+@keyframes lift { 0%,100% { transform: translateY(12px); } 50% { transform: translateY(-14px); } }
+/* heel toward the buttock (knee flexes backward) */
+@keyframes bend { 0%,100% { transform: rotate(18deg); } 50% { transform: rotate(-70deg); } }
 @keyframes orbit { from { transform: rotate(0); } to { transform: rotate(360deg); } }
 
 .ex-body {

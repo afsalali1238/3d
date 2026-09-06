@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { Exercise, Locale } from '../../content/types';
-import MotionGuide from './MotionGuide';
+import MotionGuide, { type MotionKind } from './MotionGuide';
 import './exercise.css';
 
 const FRAMES: Record<string, string[]> = {
@@ -16,7 +16,7 @@ const FRAMES: Record<string, string[]> = {
   kn_ex_ankle: ['/exercises/ankle-circle.jpg', '/exercises/ankle-circle-2.jpg'],
 };
 
-const MOTION: Record<string, 'tilt' | 'fold' | 'arch' | 'rise' | 'tuck' | 'turn' | 'squeeze' | 'lift' | 'bend' | 'circle'> = {
+const MOTION: Record<string, MotionKind> = {
   lb_ex_pelvic_tilt: 'tilt',
   lb_ex_knee_to_chest: 'fold',
   lb_ex_cat_camel: 'arch',
@@ -38,8 +38,8 @@ const CAPTION: Record<string, { en: [string, string]; ar: [string, string] }> = 
   nk_ex_neck_turn: { en: ['Ahead', 'Turn'], ar: ['أمام', 'التفاف'] },
   sh_ex_blade_squeeze: { en: ['Relax', 'Squeeze'], ar: ['استرخاء', 'ضم'] },
   hp_ex_bridge: { en: ['Down', 'Lift'], ar: ['أسفل', 'رفع'] },
-  kn_ex_bend: { en: ['Straight', 'Bend'], ar: ['مد', 'ثني'] },
-  kn_ex_ankle: { en: ['One way', 'The other'], ar: ['اتجاه', 'الآخر'] },
+  kn_ex_bend: { en: ['Stand', 'Heel up'], ar: ['وقوف', 'كعب لأعلى'] },
+  kn_ex_ankle: { en: ['Toes down', 'Toes up'], ar: ['أصابع لأسفل', 'أصابع لأعلى'] },
 };
 
 type Props = {
