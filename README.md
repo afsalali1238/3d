@@ -40,6 +40,7 @@ npm run dev        # http://localhost:5173
 | `public/models/` + `ASSET-SPEC.md` | Segmented GLBs + the exact contract for swapping in licensed scans |
 | `scripts/build_body_asset.py` | Asset pipeline: extraction, segmentation, thickness bake, GLB/typed-data generation |
 | `scripts/refine_body_mesh.py` | Render-quality pass: hole filling, denoise, isotropic remesh, AO + curvature bake |
+| `scripts/polish_normals.py` | Bilateral shading-normal polish + `_CURV` denoise (positions and regions untouched) |
 | `scripts/qa_render.py` | Headless software renderer (numpy) that mirrors the skin shader — review geometry/shading changes without a GPU |
 | `src/App.tsx` | Demo route exercising every mode |
 
@@ -82,7 +83,7 @@ also a named, tabbable ARIA target.
 ## Performance
 
 - `frameloop="demand"` — renders only during interaction/animation
-- 205 KB (male) / 188 KB (female) per body GLB (budget: ≤ 6 MB), 66k / 60k triangles
+- 195 KB (male) / 179 KB (female) per body GLB (budget: ≤ 6 MB), 66k / 60k triangles
 - shadow maps and post-processing degrade automatically on low-end devices
 - DPR capped at 2, auto-drops to 1.5 when frame time > 20 ms
 - Post-processing (SMAA + high-threshold bloom + vignette + subtle CA)

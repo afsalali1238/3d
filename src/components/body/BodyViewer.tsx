@@ -133,6 +133,7 @@ function labelAnchor(region: { focusTarget: [number, number, number]; view: stri
 
 type SceneProps = BodyViewerProps & {
   containerRef: React.RefObject<HTMLDivElement | null>;
+  quality: { post: boolean; shadows: boolean; dpr: [number, number] };
 };
 
 function Scene(props: SceneProps) {
@@ -150,6 +151,7 @@ function Scene(props: SceneProps) {
     onReady,
     onError,
     containerRef,
+    quality,
   } = props;
 
   const meshRef = useRef<THREE.Mesh>(null);
@@ -391,6 +393,7 @@ function Scene(props: SceneProps) {
             key={gender}
             ref={meshRef}
             gender={gender}
+            quality={quality.post ? 'high' : 'low'}
             breathing={breathing}
             onReady={onModelReady}
             onPointerMove={handlePointerMove}
@@ -530,7 +533,7 @@ export function BodyViewer(props: BodyViewerProps) {
         style={{ touchAction: 'none' }}
         aria-label="Interactive 3D human body"
       >
-        <Scene {...props} containerRef={containerRef} />
+        <Scene {...props} containerRef={containerRef} quality={quality} />
         <Effects enabled={quality.post} />
       </Canvas>
 

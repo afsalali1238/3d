@@ -81,14 +81,14 @@ export function createSkinDetailTexture(opts: SkinDetailOptions = {}): DataTextu
       const u = x * inv;
       const v = y * inv;
       // orange-peel: mid-frequency fbm
-      const peel = fbm(u, v, 24, 4, seed);
+      const peel = fbm(u, v, 38, 4, seed);
       // pore network: ridged noise, small and sharp
       const r1 = 1 - Math.abs(pnoise(u * 96, v * 96, 96, seed + 91) * 2 - 1);
       const r2 = 1 - Math.abs(pnoise(u * 168, v * 168, 168, seed + 143) * 2 - 1);
       const pores = Math.pow(r1 * 0.65 + r2 * 0.35, 2.4);
       // fine skin flake / crease direction bias
       const creases = fbm(u * 1.9, v, 48, 2, seed + 211);
-      const height = peel * 0.55 + creases * 0.2 - pores * 0.45;
+      const height = peel * 0.42 + creases * 0.22 - pores * 0.5;
       h[y * size + x] = height;
       cav[y * size + x] = 1 - pores;
       mottle[y * size + x] = fbm(u, v, 5, 3, seed + 401) * 0.7 + fbm(u, v, 11, 2, seed + 733) * 0.3;

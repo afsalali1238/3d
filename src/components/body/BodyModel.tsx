@@ -12,13 +12,13 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { KTX2Loader } from 'three/examples/jsm/loaders/KTX2Loader.js';
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
-import { createSkinMaterial, type SkinMaterialHandle } from './skinMaterial';
+import { createSkinMaterial, type SkinMaterialHandle, type SkinQuality } from './skinMaterial';
 import type { Gender } from './types';
 
 export const MODEL_URLS: Record<Gender, string> = {
-  male: '/models/body-male.glb?v=5',
-  female: '/models/body-female.glb?v=5',
-  neutral: '/models/body-male.glb?v=5',
+  male: '/models/body-male.glb?v=6',
+  female: '/models/body-female.glb?v=6',
+  neutral: '/models/body-male.glb?v=6',
 };
 
 const dracoLoader = new DRACOLoader().setDecoderPath('/decoders/');
@@ -27,6 +27,8 @@ const ktx2Loader = new KTX2Loader().setTranscoderPath('/decoders/');
 export type BodyModelProps = {
   gender?: Gender;
   breathing: boolean;
+  /** 'low' halves the skin shader's texture fetches on weak devices */
+  quality?: SkinQuality;
   onReady?: (handle: SkinMaterialHandle) => void;
   onPointerMove?: (e: any) => void;
   onPointerOut?: (e: any) => void;
@@ -34,7 +36,7 @@ export type BodyModelProps = {
 };
 
 export const BodyModel = forwardRef<THREE.Mesh, BodyModelProps>(function BodyModel(
-  { gender = 'male', breathing, onReady, onPointerMove, onPointerOut, onClick },
+  { gender = 'male', breathing, quality = 'high', onReady, onPointerMove, onPointerOut, onClick },
   ref,
 ) {
   const gl = useThree((s) => s.gl);
@@ -45,7 +47,7 @@ export const BodyModel = forwardRef<THREE.Mesh, BodyModelProps>(function BodyMod
     loader.setMeshoptDecoder(MeshoptDecoder);
   });
 
-  const [handle] = useState<SkinMaterialHandle>(() => createSkinMaterial());
+  const [handle] = useState<SkinMaterialHandle>(() => createSkinMaterial(undefined, quality));
   const groupRef = useRef<THREE.Group>(null);
 
   const sourceMesh = useMemo(() => {

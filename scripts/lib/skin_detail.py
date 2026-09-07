@@ -49,12 +49,12 @@ def fbm(x, y, base, octaves, seed, gain=0.5):
 def build_detail_tile(size=512, relief=1.0, seed=3):
     """returns float RGBA in [0,1]: RG = normal xy, B = pore cavity, A = mottle"""
     u, v = np.meshgrid(np.arange(size) / size, np.arange(size) / size, indexing="xy")
-    peel = fbm(u, v, 24, 4, seed)
+    peel = fbm(u, v, 38, 4, seed)
     r1 = 1 - np.abs(pnoise(u * 96, v * 96, 96, seed + 91) * 2 - 1)
     r2 = 1 - np.abs(pnoise(u * 168, v * 168, 168, seed + 143) * 2 - 1)
     pores = (r1 * 0.65 + r2 * 0.35) ** 2.4
     creases = fbm(u * 1.9, v, 48, 2, seed + 211)
-    h = peel * 0.55 + creases * 0.2 - pores * 0.45
+    h = peel * 0.42 + creases * 0.22 - pores * 0.5
     mottle = fbm(u, v, 5, 3, seed + 401) * 0.7 + fbm(u, v, 11, 2, seed + 733) * 0.3
     mottle = (mottle - mottle.min()) / max(mottle.max() - mottle.min(), 1e-5)
 
@@ -93,3 +93,14 @@ def triplanar(tile, pos, nrm, scale):
     cy = sample_tile(tile, pos[:, [0, 2]] * scale)
     cz = sample_tile(tile, pos[:, [0, 1]] * scale)
     return cx * w[:, 0:1] + cy * w[:, 1:2] + cz * w[:, 2:3]
+
+
+def planar(tile, pos, nrm, scale):
+    """single dominant-axis sample — mirrors bvPlanar() in skinMaterial.ts"""
+    a = np.abs(nrm)
+    ax = (a[:, 0] > np.maximum(a[:, 1], a[:, 2]))
+    ay = (~ax) & (a[:, 1] > a[:, 2])
+    uv = pos[:, [0, 1]].copy()
+    uv[ax] = pos[ax][:, [2, 1]]
+    uv[ay] = pos[ay][:, [0, 2]]
+    return sample_tile(tile, uv * scale)

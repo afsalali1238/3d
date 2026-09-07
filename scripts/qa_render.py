@@ -133,15 +133,36 @@ def fbm3(p, octaves=4, base=1.0, gain=0.5):
     return total / norm
 
 
-def detail_fields(objpos, objnrm, detail_scale=11.0, macro_scale=4.5):
+def _mip(tile, texels):
+    """crude trilinear stand-in: pre-blur the tile to the pixel footprint.
+
+    The WebGL texture ships with mipmaps and 4x anisotropy, so at normal
+    viewing distances the GPU never point-samples sub-pixel pores. Without
+    this the offline render aliases ~1 mm pore noise into centimetre blotches
+    and makes perfectly good skin look like a rash.
+    """
+    if texels <= 1.05:
+        return tile
+    from scipy.ndimage import gaussian_filter
+
+    sigma = texels / 2.4
+    return np.stack(
+        [gaussian_filter(tile[..., c], sigma, mode="wrap") for c in range(tile.shape[2])], -1
+    )
+
+
+def detail_fields(objpos, objnrm, detail_scale=11.0, macro_scale=4.5, world_per_px=0.0):
     """triplanar sample of the same detail tile the WebGL shader uses"""
-    from lib.skin_detail import build_detail_tile, triplanar
+    from lib.skin_detail import build_detail_tile, triplanar, planar
 
     global _TILE
     if _TILE is None:
         _TILE = build_detail_tile()
-    fine = triplanar(_TILE, objpos, objnrm, detail_scale)
-    macro = triplanar(_TILE, objpos, objnrm, macro_scale)
+    size = _TILE.shape[0]
+    fine_tile = _mip(_TILE, world_per_px * detail_scale * size)
+    macro_tile = _mip(_TILE, world_per_px * macro_scale * size)
+    fine = triplanar(fine_tile, objpos, objnrm, detail_scale)
+    macro = planar(macro_tile, objpos, objnrm, macro_scale)
     grad = np.stack([(fine[:, 0] - 0.5) * 2, (fine[:, 1] - 0.5) * 2, np.zeros(len(fine))], 1)
     return {
         "pore": fine[:, 2],
@@ -153,8 +174,13 @@ def detail_fields(objpos, objnrm, detail_scale=11.0, macro_scale=4.5):
 _TILE = None
 
 
-def shadow_from(pos, idx, ldir, res=1024, bias=0.0016):
-    """orthographic shadow map along `ldir` → per-vertex light visibility"""
+def shadow_from(pos, idx, ldir, nrm=None, res=2048, bias=0.0016, normal_offset=2.5, pcf=2):
+    """orthographic shadow map along `ldir` → per-vertex light visibility.
+
+    Uses normal-offset + slope-scaled depth bias. Without them a body-sized map
+    self-shadows all over the torso ("shadow acne") and the render reads as
+    blotchy skin — an artefact of this rasteriser, not of the WebGL material.
+    """
     from refine_body_mesh import _raster_max
 
     d = normalize(np.asarray(ldir, float))
@@ -163,7 +189,13 @@ def shadow_from(pos, idx, ldir, res=1024, bias=0.0016):
     ey = np.cross(d, ex)
     centre = (pos.max(0) + pos.min(0)) / 2
     radius = np.linalg.norm(pos - centre, axis=1).max() * 1.02
+    texel = 2.0 * radius / res
     rel = pos - centre
+    ndotl = np.ones(len(pos))
+    if nrm is not None:
+        ndotl = np.clip(nrm @ d, 0.0, 1.0)
+        # push the lookup off the surface along the normal, more at grazing angles
+        rel = rel + nrm * (texel * normal_offset * np.sqrt(1.0 - ndotl ** 2) + texel * 0.6)[:, None]
     px = (rel @ ex / radius * 0.5 + 0.5) * (res - 1)
     py = (rel @ ey / radius * 0.5 + 0.5) * (res - 1)
     w = rel @ d
@@ -171,12 +203,16 @@ def shadow_from(pos, idx, ldir, res=1024, bias=0.0016):
     _raster_max(depth, px, py, w, idx, res)
     gx = np.clip(np.round(px).astype(int), 0, res - 1)
     gy = np.clip(np.round(py).astype(int), 0, res - 1)
+    # slope-scaled bias: grazing surfaces need a deeper tolerance
+    slope_bias = bias + texel * 1.5 * np.sqrt(1.0 - ndotl ** 2) / np.maximum(ndotl, 0.15)
     lit = np.zeros(len(pos))
-    for ox in (-1, 0, 1):
-        for oy in (-1, 0, 1):
+    taps = 0
+    for ox in range(-pcf, pcf + 1):
+        for oy in range(-pcf, pcf + 1):
             near = depth[np.clip(gy + oy, 0, res - 1), np.clip(gx + ox, 0, res - 1)]
-            lit += (w >= near - bias).astype(float)
-    return lit / 9.0
+            lit += (w >= near - slope_bias).astype(float)
+            taps += 1
+    return lit / taps
 
 
 # ------------------------------------------------------------------ raster
@@ -197,6 +233,9 @@ def render(pos, nrm, rid, thk, idx, view="front", width=720, height=None, mode="
     aspect = W / H
     f = 1.0 / np.tan(np.radians(fov) / 2)
     near, far = 0.05, 30.0
+    # world units covered by one output pixel at the subject distance — used to
+    # pick the detail-texture mip so the render matches what the GPU shows
+    world_per_px = 2.0 * dist * np.tan(np.radians(fov) / 2) / H
 
     vp = (V @ np.hstack([pos, np.ones((len(pos), 1))]).T).T[:, :3]  # view space
     vn = (V[:3, :3] @ nrm.T).T
@@ -217,7 +256,7 @@ def render(pos, nrm, rid, thk, idx, view="front", width=720, height=None, mode="
 
     shadow_mask = None
     if shadows and mode == "shaded":
-        lit_v = shadow_from(pos, idx, np.array([-1.7, 2.7, 2.3]))
+        lit_v = shadow_from(pos, idx, np.array([-1.7, 2.7, 2.3]), nrm=nrm)
     zbuf = np.full((H, W), np.inf)
     fbuf = np.zeros((H, W, 3))
     # attribute buffers
@@ -323,8 +362,9 @@ def render(pos, nrm, rid, thk, idx, view="front", width=720, height=None, mode="
         thin = 1.0 - np.clip((tbuf[m] - 0.004) / 0.051, 0, 1)
         thin = thin * thin * (3 - 2 * thin)
         curv = cvbuf[m]
-        crease = np.clip((0.0 - curv) / 0.55, 0, 1) ** 1.0
-        detail = detail_fields(obuf[m], normalize(onbuf[m]))
+        crease = np.clip((-0.12 - curv) / 0.50, 0, 1)
+        crease = crease * crease * (3 - 2 * crease)
+        detail = detail_fields(obuf[m], normalize(onbuf[m]), world_per_px=world_per_px)
         cavity = (0.45 + 0.55 * detail["pore"]) * (1.0 - crease * 0.55)
         occ = np.clip((1.0 - 0.9 + 0.9 * aobuf[m]) * cavity, 0, 1)
 
@@ -335,7 +375,7 @@ def render(pos, nrm, rid, thk, idx, view="front", width=720, height=None, mode="
         alb *= (0.975 + 0.025 * detail["pore"])[:, None]
         shade = 1.0 - occ
         # blood pools in creases: shift hue red, do not paint a flat red on top
-        alb *= (1.0 + np.array([0.03, -0.10, -0.16])[None, :] * (shade * 0.8)[:, None])
+        alb *= (1.0 + np.array([0.03, -0.10, -0.16])[None, :] * (shade * 0.7)[:, None])
         albedo[m] = alb
 
         rough = np.zeros((H, W))

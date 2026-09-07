@@ -78,7 +78,18 @@ export type SkinMaterialHandle = {
 
 const ACCENT = '#00d4a8';
 
-export function createSkinMaterial(accent: string = ACCENT): SkinMaterialHandle {
+export type SkinQuality = 'high' | 'low';
+
+/**
+ * @param accent  region highlight colour
+ * @param quality 'low' drops the macro detail fetch and softens micro-detail
+ *                (three texture fetches per fragment instead of six) for
+ *                devices that already lost post-processing and shadow maps
+ */
+export function createSkinMaterial(
+  accent: string = ACCENT,
+  quality: SkinQuality = 'high',
+): SkinMaterialHandle {
   const uniforms: SkinUniforms = {
     uActiveRegion: { value: -1 },
     uHoverRegion: { value: -1 },
@@ -96,7 +107,7 @@ export function createSkinMaterial(accent: string = ACCENT): SkinMaterialHandle 
     uDetailMap: { value: null },
     // ~1 tile per 9 cm of skin → pores land around 0.4 mm
     uDetailScale: { value: 11.0 },
-    uDetailStrength: { value: 0.35 },
+    uDetailStrength: { value: quality === 'low' ? 0.24 : 0.35 },
     uMacroScale: { value: 4.5 },
     uAOStrength: { value: 0.9 },
     uCavityStrength: { value: 0.55 },
@@ -218,6 +229,11 @@ export function createSkinMaterial(accent: string = ACCENT): SkinMaterialHandle 
         }`,
         );
 
+      const macroSample =
+        quality === 'low'
+          ? 'vec4( 0.5 )'
+          : 'bvPlanar( vBvObjPos, normalize( vBvObjNormal ), uMacroScale )';
+
       shader.fragmentShader = shader.fragmentShader
         .replace(
           FRAG_COMMON,
@@ -263,6 +279,13 @@ export function createSkinMaterial(accent: string = ACCENT): SkinMaterialHandle 
             vec4 cy = texture2D( uDetailMap, p.xz * scale );
             vec4 cz = texture2D( uDetailMap, p.xy * scale );
             return cx * w.x + cy * w.y + cz * w.z;
+          }
+          // single dominant-axis fetch — enough for the low-amplitude dermal
+          // mottle, and two texture reads cheaper than a full triplanar
+          vec4 bvPlanar( vec3 p, vec3 n, float scale ) {
+            vec3 a = abs( n );
+            vec2 uv = a.x > max( a.y, a.z ) ? p.zy : ( a.y > a.z ? p.xz : p.xy );
+            return texture2D( uDetailMap, uv * scale );
           }`,
         )
         .replace(LIGHTS_INCLUDE, wrappedLights)
@@ -271,10 +294,11 @@ export function createSkinMaterial(accent: string = ACCENT): SkinMaterialHandle 
           /* glsl */ `${FRAG_DIFFUSE}
           {
             bvDetail = bvTriplanar( vBvObjPos, normalize( vBvObjNormal ), uDetailScale );
-            vec4 bvMacro = bvTriplanar( vBvObjPos, normalize( vBvObjNormal ), uMacroScale );
+            vec4 bvMacro = MACRO_SAMPLE;
 
             // creases read as cavities: baked concavity + pore mask
-            float bvCrease = smoothstep( 0.0, -0.55, vBvCurv );
+            // dead band around flat: only real folds darken, not scan ripples
+            float bvCrease = smoothstep( -0.12, -0.62, vBvCurv );
             bvCavity = mix( 1.0, bvDetail.b * 0.55 + 0.45, 0.85 ) * ( 1.0 - bvCrease * uCavityStrength );
             bvOcclusion = clamp( mix( 1.0, vBvAO, uAOStrength ) * bvCavity, 0.0, 1.0 );
 
@@ -291,7 +315,7 @@ export function createSkinMaterial(accent: string = ACCENT): SkinMaterialHandle 
             // in creases is what sells armpits, groins and finger webs. A hue
             // shift, not a flat red wash on top.
             float bvShade = 1.0 - bvOcclusion;
-            diffuseColor.rgb *= vec3( 1.0 ) + vec3( 0.03, -0.10, -0.16 ) * ( bvShade * 0.8 );
+            diffuseColor.rgb *= vec3( 1.0 ) + vec3( 0.03, -0.10, -0.16 ) * ( bvShade * 0.7 );
 
             // feed the direct-lighting scatter terms
             bvScatterGain = uSSSIntensity * ( 0.35 + 0.65 * smoothstep( -0.1, 0.45, vBvCurv ) ) * mix( 0.55, 1.0, bvOcclusion );
@@ -391,12 +415,13 @@ export function createSkinMaterial(accent: string = ACCENT): SkinMaterialHandle 
             outgoingLight += uHighlightColor * bvGlow * bvFres * 0.9;
           }`,
         );
+      shader.fragmentShader = shader.fragmentShader.replace('MACRO_SAMPLE', macroSample);
       patched = true;
     } catch (err) {
       console.warn('[BodyViewer] skin shader patch failed — plain PBR fallback', err);
     }
   };
-  material.customProgramCacheKey = () => 'bodyviewer-skin-v2';
+  material.customProgramCacheKey = () => `bodyviewer-skin-v2-${quality}`;
 
   return {
     material,

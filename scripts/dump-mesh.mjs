@@ -16,4 +16,7 @@ if (!src || !out) {
 const doc = await (await decodeIO()).read(src);
 mkdirSync(dirname(out), { recursive: true });
 const info = dumpMesh(findPrimitive(doc), out);
-console.log(`${src} -> ${out}: ${info.vertexCount} verts, ${info.triangleCount} tris`);
+console.log(
+  `${src} -> ${out}: ${info.vertexCount} verts, ${info.triangleCount} tris` +
+    (info.extras.length ? `, extras ${info.extras.join(' ')}` : ''),
+);

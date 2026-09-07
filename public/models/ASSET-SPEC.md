@@ -23,8 +23,8 @@ scan is sourced).
 
 | | male | female |
 |---|---|---|
-| vertices / triangles | 32,930 / 65,858 | 29,768 / 59,542 |
-| GLB (Draco) | 205 KB | 188 KB |
+| vertices / triangles | 32,944 / 65,858 | 29,785 / 59,542 |
+| GLB (Draco) | 195 KB | 179 KB |
 | edge length | 6–10 mm, uniform | 6–10 mm, uniform |
 | boundary edges (holes) | 0 | 0 |
 
@@ -47,6 +47,12 @@ and open holes where the eyeballs, armpits and finger webs had been.
 5. transfer `_REGIONID` (inverse-distance-weighted vote over the 8 nearest
    source vertices — keeps region borders crisp) and `_THICKNESS` (IDW mean)
 6. bake `_AO` and `_CURV` (see below), recompute area-weighted normals
+7. `scripts/polish_normals.py`: bilateral filter over the shading normals
+   (4 iterations, σ ≈ 30°, 25 % of the original normal retained) plus a
+   6-iteration blur of `_CURV`. Positions, triangles and `_REGIONID` are left
+   untouched, so this changes shading only — centimetre-scale scan ripple
+   disappears (mean normal shift 2.8°) while pecs, abs, clavicles and knuckles
+   keep their edge, and the smoother normal field also compresses ~5 % better
 
 Result: mean dihedral angle between adjacent faces drops from 10.3° to 4.3°,
 all 81 regions survive, and the segmentation boundaries stay where the
@@ -174,7 +180,8 @@ pip install numpy scipy pymeshlab pillow
 for g in male female; do
   node scripts/dump-mesh.mjs public/models/body-$g.glb build/$g.bvmesh
   python3 scripts/refine_body_mesh.py build/$g.bvmesh build/$g-refined.bvmesh
-  node scripts/build-body-glb.mjs build/$g-refined.bvmesh public/models/body-$g.glb
+  python3 scripts/polish_normals.py build/$g-refined.bvmesh build/$g-polished.bvmesh
+  node scripts/build-body-glb.mjs build/$g-polished.bvmesh public/models/body-$g.glb
 done
 cp public/models/body-male.glb public/models/body.glb
 
@@ -183,6 +190,10 @@ python3 scripts/qa_render.py build/male-refined.bvmesh build/qa.png \
         --view three4,torso,face --mode shaded   # also: ao, regions, normals, curvature
 python3 scripts/mesh_report.py build/male-refined.bvmesh
 ```
+
+`scripts/dump-mesh.mjs` round-trips every scalar channel (`_AO`, `_CURV`, …),
+so a dump → edit → build cycle can be run on the shipped GLB without going
+through the full refinement pass again.
 
 `pymeshlab` wheels link against `libGL`; on a headless box without it, build a
 stub once (`gcc -shared -fPIC -o libGL.so.1 stub.c` exporting the undefined

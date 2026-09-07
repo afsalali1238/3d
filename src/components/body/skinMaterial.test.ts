@@ -11,7 +11,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync, existsSync } from 'node:fs';
 import { ShaderChunk, ShaderLib, UniformsUtils } from 'three';
-import { createSkinMaterial } from './skinMaterial';
+import { createSkinMaterial, type SkinQuality } from './skinMaterial';
 
 /** three's own include resolution, so the mock shader matches the real one */
 function resolveIncludes(source: string): string {
@@ -23,8 +23,8 @@ function resolveIncludes(source: string): string {
   });
 }
 
-function compilePatched() {
-  const handle = createSkinMaterial();
+function compilePatched(quality: SkinQuality = 'high') {
+  const handle = createSkinMaterial(undefined, quality);
   const shader = {
     name: 'MeshPhysicalMaterial',
     uniforms: UniformsUtils.clone(ShaderLib.physical.uniforms),
@@ -38,6 +38,22 @@ function compilePatched() {
 }
 
 describe('skin material shader patch', () => {
+  it.each(['high', 'low'] as SkinQuality[])(
+    'resolves every GLSL placeholder at quality=%s',
+    (quality) => {
+      const { handle, shader } = compilePatched(quality);
+      expect(handle.patched).toBe(true);
+      expect(shader.fragmentShader).not.toContain('MACRO_SAMPLE');
+      // counts include the function definition, so one call site == 2 hits.
+      // micro detail always uses the triplanar fetch; the macro mottle uses
+      // the single-axis fetch on 'high' and is dropped entirely on 'low'.
+      const triplanar = shader.fragmentShader.match(/bvTriplanar\(/g) ?? [];
+      expect(triplanar.length).toBe(2);
+      const planar = shader.fragmentShader.match(/bvPlanar\(/g) ?? [];
+      expect(planar.length).toBe(quality === 'low' ? 1 : 2);
+    },
+  );
+
   it('applies (never silently falls back on the shipped three version)', () => {
     const { handle } = compilePatched();
     expect(handle.patched, 'shader anchors changed — patch fell back to plain PBR').toBe(true);
