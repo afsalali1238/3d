@@ -8,8 +8,10 @@ scans that meet this contract and nothing in the code changes.
 
 | File | Contents |
 |---|---|
-| `body-male.glb` | Male full body, single mesh |
-| `body-female.glb` | Female full body, single mesh |
+| `body-male.glb` | Male full body, single mesh — detailed LOD |
+| `body-female.glb` | Female full body, single mesh — detailed LOD |
+| `body-male-lo.glb` | Male, light LOD (loaded when the device also loses post-processing and shadows) |
+| `body-female-lo.glb` | Female, light LOD |
 
 ## Current assets (shipped)
 
@@ -21,12 +23,31 @@ through the render-quality refinement pass below. The female variant is a
 smooth regional reshape of the same scan (a stand-in until a licensed female
 scan is sourced).
 
-| | male | female |
-|---|---|---|
-| vertices / triangles | 32,944 / 65,858 | 29,785 / 59,542 |
-| GLB (Draco) | 195 KB | 179 KB |
-| edge length | 6–10 mm, uniform | 6–10 mm, uniform |
-| boundary edges (holes) | 0 | 0 |
+| | male (detailed) | female (detailed) | light LOD |
+|---|---|---|---|
+| vertices / triangles | 131,738 / 263,432 | 119,133 / 238,168 | 32,944 / 65,858 and 29,785 / 59,542 |
+| GLB (Draco) | see `npm test` budget (< 1.6 MB) | | < 300 KB |
+| edge length | ~3.9 mm, uniform | ~3.9 mm, uniform | 6–10 mm |
+| boundary edges (holes) | 0 | 0 | 0 |
+
+Both LODs are baked from the same source through the same pipeline, so the
+silhouette, the region borders and the pigment channel are identical — the
+viewer can swap LOD without moving a single picking boundary.
+
+### Proportions and face
+
+The raw scan is 6.4 heads tall (a real adult is 7.4–7.6) and has no facial
+features at all: no lids, no lip line, no nostrils, no brow. Two passes fix
+that, both driven by landmarks measured off the mesh rather than hard-coded
+coordinates, so they survive a rescale or a new source scan:
+
+- `scripts/sculpt_face.py::rescale_head` shrinks the head about the base of
+  the skull, easing to zero through the neck (6.4 → 7.0 heads).
+- `scripts/sculpt_face.py::sculpt` adds the missing anatomy as smooth analytic
+  displacement fields — eyeball under closed lids, lash line, lid crease, brow
+  ridge, nostrils and alae, upper and lower lip with a vermilion border,
+  philtrum, mentolabial sulcus, chin ball, cheekbones. No vertex is added,
+  removed or re-labelled.
 
 ### Render-quality refinement pass
 
@@ -135,6 +156,24 @@ uniformly afterwards).
   `_CURV` = 0) and logs a warning if an asset does not carry them, so a
   third-party GLB never renders black.
 
+### Pigment channel (recommended)
+- Float vertex attribute **`_TINT`** in `[-1,1]`: positive = hair (scalp,
+  brows, lash line, beard shadow), negative = lip vermilion. Individual hairs
+  are two orders of magnitude below any tessellation this asset will carry, so
+  hair is rendered as a dark, matte, grainy skin layer — which is what a short
+  cut, a brow and a lash line look like at arm's length. The hairline is a
+  smooth surface in head coordinates (a third of the way from brow to crown at
+  the front, nape at the back), not the scalp region border, which scallops.
+- Optional: `BodyModel.tsx` fills 0 (bare skin) when absent.
+
+### Anatomical zoning (in code, no asset change needed)
+`src/components/body/skinZones.ts` maps every region id to melanin, dryness
+and vascularity offsets and ships them as a 128×1 lookup the vertex shader
+samples by `_REGIONID`: sun-exposed face/neck/hands/forearms carry more
+melanin, knees, elbows and heels are dry and thickened, palms and soles are
+pink, covered skin is paler and smoother. Mirrored for the offline renderer in
+`scripts/lib/skin_zones.py`.
+
 ### Textures (optional but recommended for production)
 All textures **KTX2/Basis compressed** (never raw PNG at runtime), placed in
 `/public/textures/`:
@@ -181,7 +220,13 @@ for g in male female; do
   node scripts/dump-mesh.mjs public/models/body-$g.glb build/$g.bvmesh
   python3 scripts/refine_body_mesh.py build/$g.bvmesh build/$g-refined.bvmesh
   python3 scripts/polish_normals.py build/$g-refined.bvmesh build/$g-polished.bvmesh
-  node scripts/build-body-glb.mjs build/$g-polished.bvmesh public/models/body-$g.glb
+  # detailed LOD: subdivide, rescale the head, sculpt the face, re-bake channels
+  python3 scripts/enhance_geometry.py build/$g-polished.bvmesh build/$g-hi.bvmesh \
+          --levels 1 --face-scale 2.0 --head-scale 0.91 --stubble 0.3
+  python3 scripts/enhance_geometry.py build/$g-polished.bvmesh build/$g-lo.bvmesh \
+          --levels 0 --face-scale 2.0 --head-scale 0.91 --stubble 0.3
+  BV_QP=14 BV_QG=12 node scripts/build-body-glb.mjs build/$g-hi.bvmesh public/models/body-$g.glb
+  node scripts/build-body-glb.mjs build/$g-lo.bvmesh public/models/body-$g-lo.glb
 done
 cp public/models/body-male.glb public/models/body.glb
 

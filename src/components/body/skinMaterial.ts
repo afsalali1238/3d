@@ -41,6 +41,7 @@ import {
   type WebGLProgramParametersWithUniforms,
 } from 'three';
 import { getSkinDetailTexture } from './skinDetail';
+import { getSkinZoneTexture, ZONE_LUT_SIZE } from './skinZones';
 
 export type SkinUniforms = {
   uActiveRegion: { value: number };
@@ -56,6 +57,10 @@ export type SkinUniforms = {
   uRimStrength: { value: number };
   uKeyLightDirView: { value: Vector3 };
   uDetailMap: { value: Texture | null };
+  uZoneMap: { value: Texture | null };
+  uZoneLutSize: { value: number };
+  uHairColor: { value: Color };
+  uLipColor: { value: Color };
   uDetailScale: { value: number };
   uDetailStrength: { value: number };
   uMacroScale: { value: number };
@@ -105,6 +110,10 @@ export function createSkinMaterial(
     uRimStrength: { value: 0.13 },
     uKeyLightDirView: { value: new Vector3(0.5, 0.5, 0.7) },
     uDetailMap: { value: null },
+    uZoneMap: { value: null },
+    uZoneLutSize: { value: ZONE_LUT_SIZE },
+    uHairColor: { value: new Color('#2e2118') },
+    uLipColor: { value: new Color('#a9695f') },
     // ~1 tile per 9 cm of skin → pores land around 0.4 mm
     uDetailScale: { value: 11.0 },
     uDetailStrength: { value: quality === 'low' ? 0.24 : 0.35 },
@@ -118,6 +127,11 @@ export function createSkinMaterial(
     uniforms.uDetailMap.value = getSkinDetailTexture();
   } catch (err) {
     console.warn('[BodyViewer] skin detail texture unavailable', err);
+  }
+  try {
+    uniforms.uZoneMap.value = getSkinZoneTexture();
+  } catch (err) {
+    console.warn('[BodyViewer] skin zone lookup unavailable', err);
   }
 
   const material = new MeshPhysicalMaterial({
@@ -179,6 +193,9 @@ export function createSkinMaterial(
           attribute float _thickness;
           attribute float _ao;
           attribute float _curv;
+          attribute float _tint;
+          uniform sampler2D uZoneMap;
+          uniform float uZoneLutSize;
           uniform float uActiveRegion;
           uniform float uHoverRegion;
           varying float vBvSel;
@@ -186,6 +203,8 @@ export function createSkinMaterial(
           varying float vBvThick;
           varying float vBvAO;
           varying float vBvCurv;
+          varying float vBvTint;
+          varying vec3 vBvZone;
           varying vec3 vBvObjPos;
           varying vec3 vBvObjNormal;`,
         )
@@ -197,6 +216,10 @@ export function createSkinMaterial(
           vBvThick = _thickness;
           vBvAO = _ao;
           vBvCurv = _curv;
+          vBvTint = _tint;
+          // anatomical zoning: melanin / dryness / vascularity for this region
+          vBvZone = texture2D( uZoneMap,
+            vec2( ( _regionid + 0.5 ) / uZoneLutSize, 0.5 ) ).rgb - 0.5;
           vBvObjPos = transformed;
           vBvObjNormal = objectNormal;`,
         );
@@ -260,8 +283,12 @@ export function createSkinMaterial(
           varying float vBvThick;
           varying float vBvAO;
           varying float vBvCurv;
+          varying float vBvTint;
+          varying vec3 vBvZone;
           varying vec3 vBvObjPos;
           varying vec3 vBvObjNormal;
+          uniform vec3 uHairColor;
+          uniform vec3 uLipColor;
 
           // globals filled in below and consumed inside RE_Direct_Physical
           vec3 bvScatter = vec3( 0.0 );
@@ -270,6 +297,8 @@ export function createSkinMaterial(
           vec4 bvDetail = vec4( 0.5, 0.5, 1.0, 0.5 );
           float bvCavity = 1.0;
           float bvOcclusion = 1.0;
+          float bvHair = 0.0;
+          float bvLips = 0.0;
 
           // triplanar fetch of the procedural detail map
           vec4 bvTriplanar( vec3 p, vec3 n, float scale ) {
@@ -317,9 +346,31 @@ export function createSkinMaterial(
             float bvShade = 1.0 - bvOcclusion;
             diffuseColor.rgb *= vec3( 1.0 ) + vec3( 0.03, -0.10, -0.16 ) * ( bvShade * 0.7 );
 
+            // anatomical zoning: melanin absorbs blue hardest, vascularity
+            // adds haemoglobin red, both straight off the region lookup
+            float bvMel = vBvZone.r;
+            float bvRed = vBvZone.b;
+            diffuseColor.rgb *= vec3( 1.0 - 0.55 * bvMel, 1.0 - 0.95 * bvMel, 1.0 - 1.25 * bvMel );
+            diffuseColor.rgb *= vec3( 1.0 + 0.85 * bvRed, 1.0 - 0.30 * bvRed, 1.0 - 0.40 * bvRed );
+
+            // baked pigment: hair (scalp, brows, lashes, stubble) and lips.
+            // Individual hairs are far below any tessellation this asset will
+            // ever carry, so they live as a vertex channel and are rendered as
+            // a dark, matte, grainy skin layer — which is what a buzz cut, a
+            // brow and a lash line actually look like at arm's length.
+            // scalp hair sits at 1.0, brows and lashes lower — mapping the whole
+            // range keeps brows as soft hair instead of painted bars
+            bvHair = smoothstep( 0.05, 1.05, vBvTint );
+            bvLips = smoothstep( 0.10, 0.80, -vBvTint ) * 0.75;
+            vec3 bvHairAlbedo = uHairColor * ( 0.72 + 0.70 * bvMacro.a ) * ( 0.85 + 0.30 * bvDetail.b );
+            diffuseColor.rgb = mix( diffuseColor.rgb, bvHairAlbedo, bvHair );
+            diffuseColor.rgb = mix( diffuseColor.rgb, uLipColor * ( 0.92 + 0.16 * bvMottle ), bvLips );
+
             // feed the direct-lighting scatter terms
             bvScatterGain = uSSSIntensity * ( 0.35 + 0.65 * smoothstep( -0.1, 0.45, vBvCurv ) ) * mix( 0.55, 1.0, bvOcclusion );
-            bvTransGain = uSSSIntensity * bvThin * 0.85;
+            bvScatterGain *= mix( 1.0, 0.15, bvHair );
+            bvScatterGain *= mix( 1.0, 1.8, bvLips );
+            bvTransGain = uSSSIntensity * bvThin * 0.85 * ( 1.0 - bvHair );
           }`,
         )
         .replace(
@@ -331,8 +382,12 @@ export function createSkinMaterial(
             float bvThinR = 1.0 - smoothstep( 0.004, 0.06, vBvThick );
             float bvPore = bvDetail.b;
             roughnessFactor = clamp(
-              roughnessFactor * ( 1.06 - 0.16 * bvPore ) - bvThinR * 0.06 + ( 1.0 - bvOcclusion ) * 0.08,
-              0.36, 0.72 );
+              roughnessFactor * ( 1.06 - 0.16 * bvPore ) - bvThinR * 0.06 + ( 1.0 - bvOcclusion ) * 0.08
+                + vBvZone.g * 0.60,
+              0.34, 0.85 );
+            // hair reads matte and slightly clumped; lips are wet keratin
+            roughnessFactor = mix( roughnessFactor, 0.62 + 0.12 * bvDetail.b, bvHair );
+            roughnessFactor = mix( roughnessFactor, 0.30, bvLips );
           }`,
         )
         .replace(
@@ -391,6 +446,8 @@ export function createSkinMaterial(
             vec3 bvH = normalize( bvL + bvV );
             float bvNH = saturate( dot( bvN, bvH ) );
             float bvTight = pow( bvNH, 220.0 ) * 0.14 * ( 1.0 - roughnessFactor ) * bvOcclusion;
+            bvTight *= mix( 1.0, 0.25, bvHair );      // hair has no oil sheen
+            bvTight *= mix( 1.0, 1.9, bvLips );       // lips very much do
             outgoingLight += uSpecTint * bvTight;
 
             // hard ceiling at 1.0: the composer's bloom threshold sits just

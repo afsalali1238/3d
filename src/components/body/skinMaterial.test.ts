@@ -71,7 +71,7 @@ describe('skin material shader patch', () => {
       expect(shader.uniforms[name], `${name} declared in GLSL but not bound`).toBeDefined();
     }
     // and the channels the asset must provide
-    for (const attr of ['_regionid', '_thickness', '_ao', '_curv']) {
+    for (const attr of ['_regionid', '_thickness', '_ao', '_curv', '_tint']) {
       expect(shader.vertexShader).toContain(`attribute float ${attr};`);
     }
   });
@@ -110,9 +110,10 @@ describe('skin material shader patch', () => {
     }
   });
 
-  it('binds the procedural detail map', () => {
+  it('binds the procedural detail map and the region zone lookup', () => {
     const { handle } = compilePatched();
     expect(handle.uniforms.uDetailMap.value, 'detail texture missing').not.toBeNull();
+    expect(handle.uniforms.uZoneMap.value, 'zone lookup missing').not.toBeNull();
   });
 });
 
@@ -130,9 +131,14 @@ function readGlbJson(path: string): GltfJson {
 }
 
 describe('body assets carry the channels the shader reads', () => {
-  const models = ['public/models/body-male.glb', 'public/models/body-female.glb'];
+  const models = [
+    'public/models/body-male.glb',
+    'public/models/body-female.glb',
+    'public/models/body-male-lo.glb',
+    'public/models/body-female-lo.glb',
+  ];
   for (const path of models) {
-    it(`${path} declares POSITION/NORMAL/_REGIONID/_THICKNESS/_AO/_CURV`, () => {
+    it(`${path} declares POSITION/NORMAL/_REGIONID/_THICKNESS/_AO/_CURV/_TINT`, () => {
       if (!existsSync(path)) {
         expect.fail(`${path} missing`);
       }
@@ -140,7 +146,9 @@ describe('body assets carry the channels the shader reads', () => {
       const prims = json.meshes?.flatMap((m) => m.primitives) ?? [];
       expect(prims.length, 'expected exactly one primitive (single draw call)').toBe(1);
       const attrs = Object.keys(prims[0].attributes);
-      for (const need of ['POSITION', 'NORMAL', '_REGIONID', '_THICKNESS', '_AO', '_CURV']) {
+      for (const need of [
+        'POSITION', 'NORMAL', '_REGIONID', '_THICKNESS', '_AO', '_CURV', '_TINT',
+      ]) {
         expect(attrs, `${path} lacks ${need}`).toContain(need);
       }
     });

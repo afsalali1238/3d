@@ -50,7 +50,12 @@ d('bundle budgets', () => {
 
   it('total 3D payload stays under the 6 MB asset-spec ceiling', () => {
     const js = gzipKb((f) => f.endsWith('.js'));
-    const models = ['public/models/body-male.glb', 'public/models/body-female.glb']
+    const models = [
+      'public/models/body-male.glb',
+      'public/models/body-female.glb',
+      'public/models/body-male-lo.glb',
+      'public/models/body-female-lo.glb',
+    ]
       .filter(existsSync)
       .reduce((s, p) => s + statSync(p).size, 0) / 1024;
     expect(js + models).toBeLessThan(6 * 1024);
@@ -58,10 +63,16 @@ d('bundle budgets', () => {
 });
 
 describe('model assets', () => {
-  it('both body GLBs exist and stay small', () => {
+  it('the mobile LOD stays tiny and the desktop LOD stays sane', () => {
+    // Two LODs ship: the detailed body (subdivided, sculpted face) for devices
+    // that also get post-processing and shadows, and a light one for the rest.
+    for (const p of ['public/models/body-male-lo.glb', 'public/models/body-female-lo.glb']) {
+      expect(existsSync(p), `${p} missing`).toBe(true);
+      expect(statSync(p).size / 1024, `${p} too large`).toBeLessThan(300);
+    }
     for (const p of ['public/models/body-male.glb', 'public/models/body-female.glb']) {
       expect(existsSync(p), `${p} missing`).toBe(true);
-      expect(statSync(p).size / 1024, `${p} too large`).toBeLessThan(250);
+      expect(statSync(p).size / 1024, `${p} too large`).toBeLessThan(1600);
     }
   });
 

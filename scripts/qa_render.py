@@ -57,7 +57,7 @@ VIEWS = {
     "back":   ((0.0, 0.86, 0.0), 180.0,   4.0, 3.05, 35.0),
     "side":   ((0.0, 0.86, 0.0),  78.0,   4.0, 3.05, 35.0),
     "three4": ((0.0, 0.86, 0.0),  34.0,  10.0, 2.95, 35.0),
-    "face":   ((0.0, 1.60, 0.02),  18.0,  6.0, 0.52, 30.0),
+    "face":   ((0.0, 1.565, 0.02), 18.0,  6.0, 0.50, 30.0),
     "torso":  ((0.0, 1.20, 0.02),  16.0,  6.0, 1.15, 32.0),
     "hand":   ((-0.32, 0.72, 0.0), 22.0,  6.0, 0.42, 30.0),
     "knee":   ((-0.11, 0.46, 0.03), 16.0, 2.0, 0.55, 32.0),
@@ -221,6 +221,10 @@ def render(pos, nrm, rid, thk, idx, view="front", width=720, height=None, mode="
     extra = extra or {}
     ao_v = extra.get("_AO", np.ones(len(pos)))
     cv_v = extra.get("_CURV", np.zeros(len(pos)))
+    tint_v = extra.get("_TINT", np.zeros(len(pos)))
+    from lib.skin_zones import zone_lut
+
+    zone_v = zone_lut()[np.clip(np.round(rid).astype(int), 0, 127)]   # (V,3)
     target, az, el, dist, fov = VIEWS[view]
     height = height or int(width * 1.35)
     W, H = width * ss, height * ss
@@ -269,6 +273,8 @@ def render(pos, nrm, rid, thk, idx, view="front", width=720, height=None, mode="
     aobuf = np.ones((H, W))
     shbuf = np.ones((H, W))
     cvbuf = np.zeros((H, W))
+    tibuf = np.zeros((H, W))
+    zobuf = np.zeros((H, W, 3))
     mask = np.zeros((H, W), bool)
 
     # rasterise triangle by triangle over its bbox (fast enough at 22-90k tris)
@@ -315,6 +321,8 @@ def render(pos, nrm, rid, thk, idx, view="front", width=720, height=None, mode="
         onbuf[gy, gx] = w0 * nrm[i0] + w1 * nrm[i1] + w2 * nrm[i2]
         aobuf[gy, gx] = (w0[:, 0] * ao_v[i0] + w1[:, 0] * ao_v[i1] + w2[:, 0] * ao_v[i2])
         cvbuf[gy, gx] = (w0[:, 0] * cv_v[i0] + w1[:, 0] * cv_v[i1] + w2[:, 0] * cv_v[i2])
+        tibuf[gy, gx] = (w0[:, 0] * tint_v[i0] + w1[:, 0] * tint_v[i1] + w2[:, 0] * tint_v[i2])
+        zobuf[gy, gx] = w0 * zone_v[i0] + w1 * zone_v[i1] + w2 * zone_v[i2]
         if shadows and mode == "shaded":
             shbuf[gy, gx] = (w0[:, 0] * lit_v[i0] + w1[:, 0] * lit_v[i1] + w2[:, 0] * lit_v[i2])
         rbuf[gy, gx] = rid[i0]
@@ -376,10 +384,32 @@ def render(pos, nrm, rid, thk, idx, view="front", width=720, height=None, mode="
         shade = 1.0 - occ
         # blood pools in creases: shift hue red, do not paint a flat red on top
         alb *= (1.0 + np.array([0.03, -0.10, -0.16])[None, :] * (shade * 0.7)[:, None])
+
+        # anatomical zoning (melanin / vascularity) straight off the region LUT
+        mel = zobuf[m][:, 0:1]
+        red = zobuf[m][:, 2:3]
+        alb *= 1.0 - mel * np.array([0.55, 0.95, 1.25])[None, :]
+        alb *= 1.0 + red * np.array([0.85, -0.30, -0.40])[None, :]
+
+        # baked pigment: hair (scalp, brows, lashes, stubble) and lip vermilion
+        tint = tibuf[m]
+        hair = np.clip((tint - 0.05) / 1.0, 0, 1); hair = hair * hair * (3 - 2 * hair)
+        lips = np.clip((-tint - 0.10) / 0.70, 0, 1); lips = (lips * lips * (3 - 2 * lips)) * 0.75
+        hair_col = (np.array([0.180, 0.129, 0.094]) ** 2.2)[None, :] * (
+            0.72 + 0.70 * detail["mottle"][:, None]) * (0.85 + 0.30 * detail["pore"][:, None])
+        lip_col = (np.array([0.663, 0.412, 0.373]) ** 2.2)[None, :] * (
+            0.92 + 0.16 * detail["mottle"][:, None])
+        alb = alb * (1 - hair[:, None]) + hair_col * hair[:, None]
+        alb = alb * (1 - lips[:, None]) + lip_col * lips[:, None]
         albedo[m] = alb
 
         rough = np.zeros((H, W))
-        rough[m] = np.clip(0.52 * (1.06 - 0.16 * detail["pore"]) - thin * 0.06 + shade * 0.08, 0.36, 0.72)
+        rough_v = np.clip(
+            0.52 * (1.06 - 0.16 * detail["pore"]) - thin * 0.06 + shade * 0.08
+            + zobuf[m][:, 1] * 0.60, 0.34, 0.85)
+        rough_v = rough_v * (1 - hair) + (0.62 + 0.12 * detail["pore"]) * hair
+        rough_v = rough_v * (1 - lips) + 0.30 * lips
+        rough[m] = rough_v
 
         # micro-detail normal perturbation (triplanar bump, as in the shader)
         Nd = N.copy()

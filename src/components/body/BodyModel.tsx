@@ -15,10 +15,23 @@ import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.j
 import { createSkinMaterial, type SkinMaterialHandle, type SkinQuality } from './skinMaterial';
 import type { Gender } from './types';
 
+/**
+ * Two LODs ship per body. The detailed one is subdivided to ~3.9 mm edges and
+ * carries the sculpted face; the light one is the same body at the original
+ * tessellation for devices that already lost post-processing and shadows.
+ * Both are baked from the same source, so the silhouette, the region borders
+ * and the pigment channel match — switching LOD does not move the picking.
+ */
 export const MODEL_URLS: Record<Gender, string> = {
-  male: '/models/body-male.glb?v=6',
-  female: '/models/body-female.glb?v=6',
-  neutral: '/models/body-male.glb?v=6',
+  male: '/models/body-male.glb?v=7',
+  female: '/models/body-female.glb?v=7',
+  neutral: '/models/body-male.glb?v=7',
+};
+
+export const MODEL_URLS_LOW: Record<Gender, string> = {
+  male: '/models/body-male-lo.glb?v=7',
+  female: '/models/body-female-lo.glb?v=7',
+  neutral: '/models/body-male-lo.glb?v=7',
 };
 
 const dracoLoader = new DRACOLoader().setDecoderPath('/decoders/');
@@ -40,7 +53,8 @@ export const BodyModel = forwardRef<THREE.Mesh, BodyModelProps>(function BodyMod
   ref,
 ) {
   const gl = useThree((s) => s.gl);
-  const modelUrl = MODEL_URLS[gender] ?? MODEL_URLS.male;
+  const urls = quality === 'low' ? MODEL_URLS_LOW : MODEL_URLS;
+  const modelUrl = urls[gender] ?? urls.male;
   const gltf = useLoader(GLTFLoader, modelUrl, (loader) => {
     loader.setDRACOLoader(dracoLoader);
     loader.setKTX2Loader(ktx2Loader.detectSupport(gl));
@@ -70,6 +84,7 @@ export const BodyModel = forwardRef<THREE.Mesh, BodyModelProps>(function BodyMod
       ['_thickness', 0.08],
       ['_ao', 1],
       ['_curv', 0],
+      ['_tint', 0],
     ] as const) {
       if (!geo.getAttribute(name)) {
         console.warn(`[BodyViewer] model has no ${name.toUpperCase()} channel — using ${fallback}`);

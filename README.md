@@ -40,6 +40,8 @@ npm run dev        # http://localhost:5173
 | `public/models/` + `ASSET-SPEC.md` | Segmented GLBs + the exact contract for swapping in licensed scans |
 | `scripts/build_body_asset.py` | Asset pipeline: extraction, segmentation, thickness bake, GLB/typed-data generation |
 | `scripts/refine_body_mesh.py` | Render-quality pass: hole filling, denoise, isotropic remesh, AO + curvature bake |
+| `scripts/enhance_geometry.py` | Detailed LOD: Loop subdivision, head rescale, facial sculpt, AO/curvature/pigment re-bake |
+| `scripts/sculpt_face.py` | Landmark-driven facial anatomy + hair/brow/lash/lip pigment channel |
 | `scripts/polish_normals.py` | Bilateral shading-normal polish + `_CURV` denoise (positions and regions untouched) |
 | `scripts/qa_render.py` | Headless software renderer (numpy) that mirrors the skin shader — review geometry/shading changes without a GPU |
 | `src/App.tsx` | Demo route exercising every mode |
@@ -83,7 +85,7 @@ also a named, tabbable ARIA target.
 ## Performance
 
 - `frameloop="demand"` — renders only during interaction/animation
-- 195 KB (male) / 179 KB (female) per body GLB (budget: ≤ 6 MB), 66k / 60k triangles
+- Two LODs per body: detailed (263k / 238k triangles, subdivided + sculpted face) and light (66k / 60k) — the viewer picks by device tier; total 3D payload budget ≤ 6 MB
 - shadow maps and post-processing degrade automatically on low-end devices
 - DPR capped at 2, auto-drops to 1.5 when frame time > 20 ms
 - Post-processing (SMAA + high-threshold bloom + vignette + subtle CA)
