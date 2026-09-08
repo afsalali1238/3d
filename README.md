@@ -4,8 +4,6 @@ A self-contained, reusable React component for anatomical region selection
 and precise pain-point localisation on a real 3D human body. Real WebGL,
 real depth, real orbit — no primitive mannequin, no 2D hotspot fake.
 
-![module](build/seg-front.png)
-
 ## Product direction
 
 The viewer is the locator tier of a planned guided anatomy → exercise flow. See `docs/`:
@@ -19,9 +17,20 @@ No approved clinical content exists in this repo. Placeholder rows are signed `P
 ## Quick start
 
 ```bash
-npm install
+npm ci
 npm run dev        # http://localhost:5173
 ```
+
+## Verification
+
+```bash
+npm run content:build   # after editing content/*.csv; commit the generated bundle
+npm run verify          # the same content, type, build and test checks used by CI
+```
+
+Content generation is deterministic. Verification fails if the committed bundle
+is missing or differs from the CSV source; it does not silently repair stale content.
+`npm run build` also compiles and validates content for deployments.
 
 ## What's inside
 
@@ -30,14 +39,15 @@ npm run dev        # http://localhost:5173
 | `src/components/body/BodyViewer.tsx` | The component — the only surface the app sees |
 | `src/components/body/types.ts` | Public prop/callback types (`BodyRegion`, `PainPin`, …) |
 | `src/components/body/regions.ts` / `regions.gen.ts` | Typed region data: 81 regions, EN/AR labels, focus targets, neighbour graph |
-| `src/components/body/skinMaterial.ts` | Patched `MeshPhysicalMaterial`: wrap-lighting SSS, fresnel backscatter, rim light, in-shader region highlight (guarded `onBeforeCompile`, plain-PBR fallback) |
+| `src/components/body/skinMaterial.ts` | Patched `MeshPhysicalMaterial`: RGB wrap-lighting SSS, pore-scale bump/roughness, baked AO/curvature/pigment channels, in-shader region highlight (guarded `onBeforeCompile`, plain-PBR fallback) |
 | `src/components/body/useRegionPicker.ts` | Raycast → `_REGIONID` region resolution + 20 px snap for small targets |
 | `src/components/body/CameraRig.tsx` | Damped spherical orbit, ±35° vertical clamp, idle auto-rotate, fly-to-region |
 | `src/components/body/PinMarker.tsx` | Surface-welded draggable pain pins, yellow→red intensity grading |
 | `src/components/body/Fallback2D.tsx` | No-WebGL SVG diagram — same region IDs, same callbacks |
 | `src/components/body/store.ts` | Internal zustand state (never leaks outside the module) |
 | `public/models/` + `ASSET-SPEC.md` | Segmented GLBs + the exact contract for swapping in licensed scans |
-| `scripts/build_body_asset.py` | Asset pipeline: extraction, segmentation, thickness bake, GLB/typed-data generation |
+| `scripts/build_body_asset.py` | Source asset pipeline: extraction, segmentation, thickness bake, GLB/typed-data generation |
+| `scripts/enhance_body_realism.mjs` | Runtime realism pass: Loop subdivision, adult proportions, facial/body landmark sculpt, baked AO/curvature/pigment channels |
 | `src/App.tsx` | Demo route exercising every mode |
 
 ## Component API
@@ -79,9 +89,10 @@ also a named, tabbable ARIA target.
 ## Performance
 
 - `frameloop="demand"` — renders only during interaction/animation
-- 0.63 MB per body GLB (budget: ≤ 6 MB), 22.4k triangles
+- ~330 KB per body Draco GLB (budget: ≤ 6 MB), ~91k triangles / ~46k vertices
 - DPR capped at 2, auto-drops to 1.5 when frame time > 20 ms
-- Post-processing (SMAA + high-threshold bloom + vignette + subtle CA)
+- Soft self-shadowed studio key light, HDRI fill/rim, and post-processing
+  (SMAA + high-threshold bloom + vignette + subtle CA)
   disabled automatically on low-end devices; no WebGL → 2D SVG fallback
 - Decoders (Draco/KTX2/Basis) self-hosted in `/public/decoders/`
 
