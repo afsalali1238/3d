@@ -32,17 +32,17 @@ import { Fallback2D } from './Fallback2D';
 import { useRegionPicker, type RegionHit } from './useRegionPicker';
 import { useViewerStore } from './store';
 import { REGIONS, REGION_BY_ID, regionLabel } from './regions';
-import type { SkinMaterialHandle } from './skinMaterial';
+import type { SkinMaterialHandle, SkinQuality } from './skinMaterial';
 import type { BodyViewerProps, PainPin } from './types';
 import './bodyViewer.css';
 
 /* ------------------------------------------------------------------ perf */
 
-function detectQuality(): { post: boolean; dpr: [number, number] } {
+function detectQuality(): { post: boolean; dpr: [number, number]; skin: SkinQuality } {
   const cores = typeof navigator !== 'undefined' ? navigator.hardwareConcurrency ?? 4 : 4;
   const dpr = typeof window !== 'undefined' ? window.devicePixelRatio : 1;
   const lowEnd = cores <= 4 && dpr > 1.5; // typical low/mid mobile
-  return { post: !lowEnd, dpr: [1, 2] };
+  return { post: !lowEnd, dpr: [1, 2], skin: lowEnd ? 'low' : 'high' };
 }
 
 function webglAvailable(): boolean {
@@ -126,6 +126,7 @@ function labelAnchor(region: { focusTarget: [number, number, number]; view: stri
 
 type SceneProps = BodyViewerProps & {
   containerRef: React.RefObject<HTMLDivElement | null>;
+  skinQuality: SkinQuality;
 };
 
 function Scene(props: SceneProps) {
@@ -143,6 +144,7 @@ function Scene(props: SceneProps) {
     onReady,
     onError,
     containerRef,
+    skinQuality,
   } = props;
 
   const meshRef = useRef<THREE.Mesh>(null);
@@ -325,7 +327,7 @@ function Scene(props: SceneProps) {
     : null;
 
   /* key light direction in view space for the SSS term -------------------- */
-  const keyDir = useMemo(() => new THREE.Vector3(-1.6, 2.6, 2.2).normalize(), []);
+  const keyDir = useMemo(() => new THREE.Vector3(-1.8, 2.8, 2.4).normalize(), []);
   useFrame(() => {
     const h = handleRef.current;
     if (!h) return;
@@ -341,17 +343,26 @@ function Scene(props: SceneProps) {
       <CameraRig enabled />
       <AdaptiveDpr />
 
-      {/* three-point rig over the HDRI ambient */}
+      {/* studio rig over the HDRI ambient: a soft shadowed key plus fill/rim */}
       <directionalLight
-        position={[-1.6, 2.6, 2.2]}
-        intensity={2.0}
-        color="#fff4e6"
-        castShadow={false}
+        position={[-1.8, 2.8, 2.4]}
+        intensity={2.35}
+        color="#fff1df"
+        castShadow
+        shadow-mapSize={[2048, 2048]}
+        shadow-camera-near={0.2}
+        shadow-camera-far={6}
+        shadow-camera-left={-1.15}
+        shadow-camera-right={1.15}
+        shadow-camera-top={1.95}
+        shadow-camera-bottom={-0.18}
+        shadow-bias={-0.00008}
+        shadow-normalBias={0.026}
       />
-      <directionalLight position={[1.8, 1.4, 1.6]} intensity={0.6} color="#e6f0ff" />
-      <directionalLight position={[0.4, 2.8, -2.4]} intensity={1.5} color="#ffffff" />
+      <directionalLight position={[2.0, 1.55, 1.7]} intensity={0.72} color="#e7f0ff" />
+      <directionalLight position={[0.35, 2.9, -2.6]} intensity={1.65} color="#ffffff" />
 
-      <Environment files="/textures/studio.hdr" environmentIntensity={0.6} background={false} />
+      <Environment files="/textures/studio.hdr" environmentIntensity={0.78} background={false} />
 
       <ModelBoundary
         onError={onError}
@@ -369,6 +380,7 @@ function Scene(props: SceneProps) {
             key={gender}
             ref={meshRef}
             gender={gender}
+            quality={skinQuality}
             breathing={breathing}
             onReady={onModelReady}
             onPointerMove={handlePointerMove}
@@ -488,6 +500,7 @@ export function BodyViewer(props: BodyViewerProps) {
       <Canvas
         frameloop="demand"
         dpr={quality.dpr}
+        shadows
         gl={{
           antialias: true,
           toneMapping: THREE.ACESFilmicToneMapping,
@@ -499,7 +512,7 @@ export function BodyViewer(props: BodyViewerProps) {
         style={{ touchAction: 'none' }}
         aria-label="Interactive 3D human body"
       >
-        <Scene {...props} containerRef={containerRef} />
+        <Scene {...props} containerRef={containerRef} skinQuality={quality.skin} />
         <Effects enabled={quality.post} />
       </Canvas>
 
