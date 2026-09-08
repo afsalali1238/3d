@@ -4,8 +4,6 @@ A self-contained, reusable React component for anatomical region selection
 and precise pain-point localisation on a real 3D human body. Real WebGL,
 real depth, real orbit — no primitive mannequin, no 2D hotspot fake.
 
-![module](build/seg-front.png)
-
 ## Product direction
 
 The viewer is the locator tier of a planned guided anatomy → exercise flow. See `docs/`:
@@ -19,9 +17,20 @@ No approved clinical content exists in this repo. Placeholder rows are signed `P
 ## Quick start
 
 ```bash
-npm install
+npm ci
 npm run dev        # http://localhost:5173
 ```
+
+## Verification
+
+```bash
+npm run content:build   # after editing content/*.csv; commit the generated bundle
+npm run verify          # the same content, type, build and test checks used by CI
+```
+
+Content generation is deterministic. Verification fails if the committed bundle
+is missing or differs from the CSV source; it does not silently repair stale content.
+`npm run build` also compiles and validates content for deployments.
 
 ## What's inside
 

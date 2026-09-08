@@ -5,14 +5,16 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
-    "build": "tsc -b && vite build",
+    "build": "npm run content:build && npm run typecheck && vite build",
     "preview": "vite preview --host 0.0.0.0",
     "test": "vitest run",
     "test:watch": "vitest",
-    "verify": "vite-node scripts/content-build.ts && tsc -b --noEmit && vite build && vitest run",
+    "verify": "npm run content:check-bundle && npm run build && npm test",
     "content:export": "vite-node scripts/content-export.ts",
     "content:check": "vite-node scripts/content-check.ts",
-    "content:build": "vite-node scripts/content-build.ts"
+    "content:build": "vite-node scripts/content-build.ts",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.test.json --noEmit",
+    "content:check-bundle": "vite-node scripts/content-build.ts --check"
   },
   "dependencies": {
     "@react-three/drei": "^9.114.3",
