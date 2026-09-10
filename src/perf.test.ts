@@ -58,13 +58,10 @@ d('bundle budgets', () => {
 });
 
 describe('model assets', () => {
-  it('both body GLBs exist and stay within the realistic-asset budget', () => {
+  it('both body GLBs exist and stay small', () => {
     for (const p of ['public/models/body-male.glb', 'public/models/body-female.glb']) {
       expect(existsSync(p), `${p} missing`).toBe(true);
-      // Realism pass deliberately spends more geometry/vertex-channel budget
-      // than the original 80 KB locator mesh. The asset spec ceiling remains
-      // the user-facing constraint: one body must be comfortably below 6 MB.
-      expect(statSync(p).size / 1024, `${p} too large`).toBeLessThan(3 * 1024);
+      expect(statSync(p).size / 1024, `${p} too large`).toBeLessThan(250);
     }
   });
 

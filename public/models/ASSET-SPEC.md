@@ -19,14 +19,7 @@ skin shell was extracted (11.4k verts / 22.4k tris), segmented into 81
 anatomical regions, and baked with a per-vertex thickness channel by
 `scripts/build_body_asset.py`. The female variant is a smooth regional
 reshape of the same scan (a stand-in until a licensed female scan is
-sourced).
-
-The shipped runtime meshes then go through `scripts/enhance_body_realism.mjs`:
-the neutralised base GLBs in `/scripts/base-models/` are Loop-subdivided once
-(~45k verts / ~89k tris), adult head proportions are corrected, facial and
-body landmarks are sculpted, and `_AO`, `_CURV`, and `_TINT` vertex channels
-are baked for the skin shader. The Draco-compressed runtime GLBs are ~330 KB
-each.
+sourced). Each GLB is ~80 KB.
 
 ### Universal anatomy pass (applied to both bodies)
 
@@ -63,8 +56,7 @@ uniformly afterwards).
 ### Geometry
 - Single mesh (one draw call). **Do not** split by body part — separate
   meshes cause seams, popping and z-fighting on highlight.
-- 80k–250k triangles preferred for production realism; hard ceiling is the
-  6 MB one-body payload budget below rather than a fixed triangle count.
+- 40k–80k triangles preferred; hard ceiling 120k.
 - T-pose or relaxed A-pose, feet flat on y=0, arms slightly away from the
   torso so armpits / inner arms are clickable.
 - Metres, Y-up, +Z anterior, +X anatomical left. Height ≈ 1.6–1.9 m,
@@ -86,21 +78,11 @@ uniformly afterwards).
 - Region boundaries must follow anatomical contours (muscle/joint lines),
   not bounding boxes.
 
-### Skin realism channels (recommended)
+### Thickness channel (recommended)
 - Float vertex attribute **`_THICKNESS`** = approximate local slab thickness
   in metres (ears/fingers/nose ≈ 0.01, torso ≥ 0.15). Drives the
-  approximated subsurface scattering.
-- Float vertex attribute **`_AO`** = 0..1 crease occlusion amount for armpits,
-  groin, eye sockets, mouth line, nostrils and other contact folds.
-- Float vertex attribute **`_CURV`** = signed mean-curvature cue, where
-  positive values are concave/cavity and negative values are convex/bony.
-- Float vertex attribute **`_TINT`** = compact pigment mask. Positive values
-  shade short hair, brows, lashes and beard shadow; negative values shade lip
-  vermilion and subtle rosy tissue.
-
-If these optional channels are absent, skin still renders with PBR, wrap
-lighting, procedural pore detail and region highlighting, but with less local
-anatomical variation.
+  approximated subsurface scattering. If absent, skin renders with plain
+  PBR + wrap lighting only.
 
 ### Textures (optional but recommended for production)
 All textures **KTX2/Basis compressed** (never raw PNG at runtime), placed in
@@ -139,16 +121,8 @@ crash, show a blank canvas, or silently substitute a low-quality mesh.
 # source data: clone of github.com/ashemag/human-atlas (BodyParts3D chunks)
 ATLAS_DIR=/path/to/human-atlas/public/models python3 scripts/build_body_asset.py
 python3 scripts/build_studio_hdr.py
-./scripts/compress-models.sh
+./scripts/compress-models.sh   # Draco: ~634 KB -> ~80 KB per body
 node scripts/neutralise-universal.mjs  # universal anatomy (Draco in/out)
-cp public/models/body-male.glb scripts/base-models/body-male.glb
-cp public/models/body-female.glb scripts/base-models/body-female.glb
-node scripts/enhance_body_realism.mjs
-for g in male female; do
-  npx gltf-transform draco public/models/body-$g.glb public/models/body-$g.glb \
-    --method edgebreaker --encode-speed 5 --decode-speed 5
-done
-cp public/models/body-male.glb public/models/body.glb
 ```
 
 The `_REGIONID` channel survives Draco quantization integer-exact (all 81

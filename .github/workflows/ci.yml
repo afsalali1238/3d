@@ -5,17 +5,9 @@ on:
     branches: ['**']
   pull_request:
 
-permissions:
-  contents: read
-
-concurrency:
-  group: ci-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -24,16 +16,36 @@ jobs:
           cache: npm
       - run: npm ci
 
-      # Use the same checks locally and in CI, including tests against dist/.
-      - name: Verify content, types, build and tests
-        run: npm run verify
+      # Clinician-authored content: validate and compile before anything else
+      - name: Validate content
+        run: npx vite-node scripts/content-check.ts
+
+      - name: Build content bundle
+        run: npx vite-node scripts/content-build.ts
+
+      - name: Content bundle is committed and up to date
+        run: git diff --exit-code src/content/bundle.gen.ts
+
+      # Type safety
+      - name: Typecheck (app)
+        run: npx tsc -b --noEmit
+
+      - name: Typecheck (tests + scripts)
+        run: npx tsc -p tsconfig.test.json --noEmit
+
+      # Build first: the perf budget test measures the real dist output
+      - name: Build
+        run: npx vite build
+
+      # Compliance scan, search integrity, perf budgets
+      - name: Test
+        run: npx vitest run
 
       - name: Bundle report
-        if: ${{ success() && hashFiles('dist/assets/*') != '' }}
+        if: always()
         run: |
           echo "### Bundle sizes (gzip)" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
-          shopt -s nullglob
           for f in dist/assets/*.js dist/assets/*.css; do
             printf '%-42s %8s\n' "$(basename "$f")" "$(gzip -c "$f" | wc -c | awk '{printf "%.1f KB", $1/1024}')" >> $GITHUB_STEP_SUMMARY
           done

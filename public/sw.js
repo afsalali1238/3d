@@ -1,5 +1,5 @@
 /* Versioned network-first worker. Never cache-first without invalidation. */
-const VERSION = 'bv-content-2026-09-08-realism-2';
+const VERSION = 'bv-content-2026-09-10-revert-realism';
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
